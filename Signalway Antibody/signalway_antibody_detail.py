@@ -13,7 +13,7 @@ Base = declarative_base()
 
 
 class Detail(Base):
-    __tablename__ = "signalway_antibody_detail"
+    __tablename__ = "sab_antibody_detail"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -54,7 +54,7 @@ class Detail(Base):
 
 
 class Application(Base):
-    __tablename__ = "signalway_antibody_application"
+    __tablename__ = "sab_antibody_application"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -65,7 +65,7 @@ class Application(Base):
 
 
 class Citations(Base):
-    __tablename__ = "signalway_antibody_citations"
+    __tablename__ = "sab_antibody_citations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -79,7 +79,7 @@ class Citations(Base):
 
 
 class Price(Base):
-    __tablename__ = "signalway_antibody_price"
+    __tablename__ = "sab_antibody_price"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -92,7 +92,7 @@ class Price(Base):
 
 
 class Images(Base):
-    __tablename__ = "signalway_antibody_images"
+    __tablename__ = "sab_antibody_images"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -373,7 +373,6 @@ class Signalway(object):
             p = html.xpath(
                 './/span[contains(text(), "Application Details")]/../following-sibling::div[@class="content"]/ul/li//text()'
             )
-            print(p)
         except Exception:
             return results
         for text in p:
@@ -389,6 +388,13 @@ class Signalway(object):
                 sub_dil = text.split(": ")[1].strip()
                 # print(sub_app, sub_dil)
                 results.append([sub_app, sub_dil])
+            elif " (" in text:
+                for single_line in text.split(","):
+                    sub_app = single_line.split(" (")[0].replace("/n", "").strip()
+                    sub_dil = single_line.split(" (")[1].replace(")", "").strip()
+                    # print(sub_app, sub_dil)
+                    results.append([sub_app, sub_dil])
+                return results
             else:
                 note = " | ".join(i for i in p)
                 return note
@@ -418,8 +424,8 @@ class Signalway(object):
             for item in spans:
                 text = item.xpath(".//text()")
                 title = "".join(i for i in text).split("  PMID: ")[0].strip()
-                pmid = item.xpath(".//a/text()")[0].split("PMID:")[1].strip()
-                link = item.xpath(".//a/@href")[0].strip()
+                pmid = item.xpath(".//strong/a/text()")[0].split("PMID:")[1].strip()
+                link = item.xpath(".//strong/a/@href")[0].strip()
                 results.append([pmid, title, link])
         except Exception:
             return results
@@ -446,14 +452,17 @@ class Signalway(object):
 
 
 if __name__ == "__main__":
-    for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-4707-PKC-theta-Antibody-29261.html"
+    while r.exists("Signalway"):
+        url = r.lpop("Signalway")
         if "-Conjugated-" in url:
+            print("pass")
             continue
+        print(url)
         try:
             lxml = Signalway().format(url)
         except Exception as e:
             print(e)
+            r.rpush("Signalway", url)
             continue
         brand = Signalway().brand()
         catalog_number = Signalway().catalog_number(lxml)
@@ -482,7 +491,6 @@ if __name__ == "__main__":
         sub_price = Signalway().sub_price(lxml)
         sub_citations = Signalway().sub_citations(lxml)
         sub_images = Signalway().sub_images(lxml)
-        print(sub_application)
 
         new_detial = Detail(
             Brand=brand,
@@ -517,7 +525,7 @@ if __name__ == "__main__":
 
         if isinstance(sub_application, str):
             new_application = Application(
-                Catalog_number=catalog_number, Note=sub_application
+                Catalog_Number=catalog_number, Note=sub_application
             )
             session.add(new_application)
         elif isinstance(sub_application, list):
@@ -526,7 +534,7 @@ if __name__ == "__main__":
                 app = sub[0]
                 dil = sub[1]
                 new_application = Application(
-                    Catalog_number=catalog_number, Application=app, Dilution=dil
+                    Catalog_Number=catalog_number, Application=app, Dilution=dil
                 )
                 objects_sub_application.append(new_application)
             session.bulk_save_objects(objects_sub_application)
@@ -540,7 +548,7 @@ if __name__ == "__main__":
                 siz = sub[1]
                 pri = sub[2]
                 new_price = Price(
-                    Catalog_number=catalog_number,
+                    Catalog_Number=catalog_number,
                     sub_Catalog_Number=cat,
                     Size=siz,
                     Price=pri,
@@ -557,8 +565,8 @@ if __name__ == "__main__":
                 tit = sub[1]
                 lin = sub[2]
                 new_citations = Citations(
-                    Catalog_number=catalog_number,
-                    PMID=tit,
+                    Catalog_Number=catalog_number,
+                    PMID=pid,
                     Article_title=tit,
                     Pubmed_url=lin,
                 )
@@ -573,11 +581,11 @@ if __name__ == "__main__":
                 img_u = sub[0]
                 img_d = sub[1]
                 new_images = Images(
-                    Catalog_number=catalog_number,
+                    Catalog_Number=catalog_number,
                     Image_url=img_u,
                     Image_description=img_d,
                 )
-                objects_sub_images.append(new_citations)
+                objects_sub_images.append(new_images)
             session.bulk_save_objects(objects_sub_images)
         else:
             pass
@@ -587,7 +595,7 @@ if __name__ == "__main__":
             session.close()
             print("done")
         except Exception as e:
-            # r.lpush("immuquest", extract)
+            r.rpush("Signalway", url)
             session.rollback()
             print(2, e)
         time.sleep(random.uniform(1, 2.5))
