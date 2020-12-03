@@ -446,7 +446,10 @@ class Signalway(object):
                 "https://www.sabbiotech.com.cn/"
                 + item.xpath(".//span/img/@src")[0].strip()
             )
-            img_des = item.xpath(".//i/text()")[0].strip()
+            try:
+                img_des = item.xpath(".//i/text()")[0].strip()
+            except Exception:
+                img_des = None
             results.append([img_url, img_des])
         return results
 
