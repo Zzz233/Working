@@ -236,6 +236,8 @@ class Signalway(object):
                 geneid = noText.split("Gene ID:")[1].strip().split(" ")[0]
             elif "Gene id:" in noText:
                 geneid = noText.split("Gene id:")[1].strip().split(" ")[0]
+            else:
+                return None
         except Exception:
             return None
         return geneid
@@ -275,6 +277,8 @@ class Signalway(object):
                 swissprot = noText.split("Swiss-Prot#: ")[1].split(" ")[0]
             elif "Swiss-Prot:" in noText:
                 swissprot = noText.split("Swiss-Prot: ")[1].split(" ")[0]
+            else:
+                return None
         except Exception:
             return None
         return swissprot
@@ -307,10 +311,62 @@ class Signalway(object):
             return None
         return isotype
 
+    def purify(self, html):
+        try:
+            purify = html.xpath(
+                './/span[contains(text(), "Purification")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return purify
+
+    def citations(self, html):
+        try:
+            citations = len(html.xpath('.//span[@class="list_item1"]'))
+        except Exception:
+            return 0
+        return citations
+
+    def citations_url(self):
+        return None
+
+    def dataSheet_url(self, html):
+        try:
+            dataSheet_url = (
+                "https://www.sabbiotech.com.cn/"
+                + html.xpath('.//a[@class="btn-pdf"]/@href')[0].strip()
+            )
+        except Exception:
+            return None
+        return dataSheet_url
+
+    def review(self):
+        return None
+
+    def price_url(self):
+        return None
+
+    def image_qty(self, html):
+        try:
+            image_qty = len(
+                html.xpath(
+                    './/span[contains(text(), "Images")]/../following-sibling::div[@class="content"]/ul/li'
+                )
+            )
+        except Exception:
+            return 0
+        return image_qty
+
+    def image_url(self):
+        return None
+
+    def Note(self):
+        return None
+
 
 if __name__ == "__main__":
     for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-216158-SEMA6D-Rabbit-Polyclonal-Antibody-29278.html"
+        url = "https://www.sabbiotech.com.cn/g-11294-Histone-H3(mono-methyl-K79)-Mouse-Monoclonal-Antibody-(1E10)-HW044.html"
         if "-Conjugated-" in url:
             continue
         lxml = Signalway().format(url)
@@ -332,4 +388,8 @@ if __name__ == "__main__":
         predicted_mw = Signalway().predicted_mw(lxml)
         observed_mw = Signalway().observed_mw(lxml)
         isotype = Signalway().isotype(lxml)
-        print(isotype)
+        purify = Signalway().purify(lxml)
+        citations = Signalway().citations(lxml)
+        dataSheet_url = Signalway().dataSheet_url(lxml)
+        image_qty = Signalway().image_qty(lxml)
+        print(image_qty)
