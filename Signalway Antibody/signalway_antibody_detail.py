@@ -366,7 +366,33 @@ class Signalway(object):
     # ======================================================================== #
     # application表
     def sub_application(self, html):
-        return None
+        # 使用时判断返回类型 list str
+        results = []
+        note = 0
+        try:
+            p = html.xpath(
+                './/span[contains(text(), "Application Details")]/../following-sibling::div[@class="content"]/ul/li//text()'
+            )
+            print(p)
+        except Exception:
+            return results
+        for text in p:
+            if "Not yet tested in other applications." in text:
+                break
+            elif "\t" in text:
+                sub_app = text.split("\t")[0].replace("/n", "").strip()
+                sub_dil = text.split("\t")[1].strip()
+                # print(sub_app, sub_dil)
+                results.append([sub_app, sub_dil])
+            elif ": " in text:
+                sub_app = text.split(": ")[0].replace("/n", "").strip()
+                sub_dil = text.split(": ")[1].strip()
+                # print(sub_app, sub_dil)
+                results.append([sub_app, sub_dil])
+            else:
+                note = " | ".join(i for i in p)
+                return note
+        return results
 
     # ======================================================================== #
     # price表
@@ -421,10 +447,14 @@ class Signalway(object):
 
 if __name__ == "__main__":
     for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-216158-SEMA6D-Rabbit-Polyclonal-Antibody-29278.html"
+        url = "https://www.sabbiotech.com.cn/g-4707-PKC-theta-Antibody-29261.html"
         if "-Conjugated-" in url:
             continue
-        lxml = Signalway().format(url)
+        try:
+            lxml = Signalway().format(url)
+        except Exception as e:
+            print(e)
+            continue
         brand = Signalway().brand()
         catalog_number = Signalway().catalog_number(lxml)
         product_name = Signalway().product_name(lxml)
@@ -448,8 +478,116 @@ if __name__ == "__main__":
         dataSheet_url = Signalway().dataSheet_url(lxml)
         image_qty = Signalway().image_qty(lxml)
 
+        sub_application = Signalway().sub_application(lxml)
         sub_price = Signalway().sub_price(lxml)
-
         sub_citations = Signalway().sub_citations(lxml)
         sub_images = Signalway().sub_images(lxml)
-        print(sub_images)
+        print(sub_application)
+
+        new_detial = Detail(
+            Brand=brand,
+            Catalog_Number=catalog_number,
+            Product_Name=product_name,
+            Antibody_Type=antibody_type,
+            Sellable=sellable,
+            Synonyms=synonyms,
+            Application=application,
+            # Conjugated=conjugated,
+            Clone_Number=clone_number,
+            # Recombinant_Antibody=recombinant_antibody,
+            Modified=modified,
+            Host_Species=host_species,
+            # Reactivity_Species=reactivity_species,
+            Antibody_detail_URL=antibody_detail_url,
+            GeneId=geneid,
+            # KO_Validation=ko_validation,
+            Species_Reactivity=species_reactivity,
+            SwissProt=swissprot,
+            Immunogen=immunogen,
+            Predicted_MW=predicted_mw,
+            Observed_MW=observed_mw,
+            Isotype=isotype,
+            Purify=purify,
+            Citations=str(citations),
+            DataSheet_URL=dataSheet_url,
+            # Review=review,
+            Image_qty=image_qty,
+        )
+        session.add(new_detial)
+
+        if isinstance(sub_application, str):
+            new_application = Application(
+                Catalog_number=catalog_number, Note=sub_application
+            )
+            session.add(new_application)
+        elif isinstance(sub_application, list):
+            objects_sub_application = []
+            for sub in sub_application:
+                app = sub[0]
+                dil = sub[1]
+                new_application = Application(
+                    Catalog_number=catalog_number, Application=app, Dilution=dil
+                )
+                objects_sub_application.append(new_application)
+            session.bulk_save_objects(objects_sub_application)
+        else:
+            pass
+
+        if isinstance(sub_price, list):
+            objects_sub_price = []
+            for sub in sub_price:
+                cat = sub[0]
+                siz = sub[1]
+                pri = sub[2]
+                new_price = Price(
+                    Catalog_number=catalog_number,
+                    sub_Catalog_Number=cat,
+                    Size=siz,
+                    Price=pri,
+                )
+                objects_sub_price.append(new_price)
+            session.bulk_save_objects(objects_sub_price)
+        else:
+            pass
+
+        if isinstance(sub_citations, list):
+            objects_sub_citations = []
+            for sub in sub_citations:
+                pid = sub[0]
+                tit = sub[1]
+                lin = sub[2]
+                new_citations = Citations(
+                    Catalog_number=catalog_number,
+                    PMID=tit,
+                    Article_title=tit,
+                    Pubmed_url=lin,
+                )
+                objects_sub_citations.append(new_citations)
+            session.bulk_save_objects(objects_sub_citations)
+        else:
+            pass
+
+        if isinstance(sub_images, list):
+            objects_sub_images = []
+            for sub in sub_images:
+                img_u = sub[0]
+                img_d = sub[1]
+                new_images = Images(
+                    Catalog_number=catalog_number,
+                    Image_url=img_u,
+                    Image_description=img_d,
+                )
+                objects_sub_images.append(new_citations)
+            session.bulk_save_objects(objects_sub_images)
+        else:
+            pass
+
+        try:
+            session.commit()
+            session.close()
+            print("done")
+        except Exception as e:
+            # r.lpush("immuquest", extract)
+            session.rollback()
+            print(2, e)
+        time.sleep(random.uniform(1, 2.5))
