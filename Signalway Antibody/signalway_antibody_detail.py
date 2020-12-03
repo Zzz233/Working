@@ -169,10 +169,148 @@ class Signalway(object):
             return None
         return synonyms
 
+    def application(self, html):
+        try:
+            application = html.xpath(
+                './/span[contains(text(), "Applications")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return application
+
+    def conjugated(self):
+        return None
+
+    def clone_number(self, html):
+        try:
+            clone_number = html.xpath(
+                './/span[contains(text(), "Clone No.")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return clone_number
+
+    def recombinant_antibody(self):
+        return None
+
+    def modified(self, html):
+        try:
+            modified = html.xpath(
+                './/span[contains(text(), "Modification")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return modified
+
+    def host_species(self, html):
+        try:
+            host_species = html.xpath(
+                './/span[contains(text(), "Host Species")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return host_species
+
+    def reactivity_species(self):
+        return None
+
+    def antibody_detail_url(self, url):
+        return url
+
+    def antibody_status(self):
+        return None
+
+    def price_status(self):
+        return None
+
+    def citations_status(self):
+        return None
+
+    def geneid(self, html):
+        try:
+            accessionNo = html.xpath(
+                './/span[contains(text(), "Accession No.")]/following-sibling::i//text()'
+            )
+            noText = " ".join(i for i in accessionNo)
+            if "Gene ID:" in noText:
+                geneid = noText.split("Gene ID:")[1].strip().split(" ")[0]
+            elif "Gene id:" in noText:
+                geneid = noText.split("Gene id:")[1].strip().split(" ")[0]
+        except Exception:
+            return None
+        return geneid
+
+    def ko_validation(self):
+        return None
+
+    def species_reactivity(self, html):
+        try:
+            species_reactivity = (
+                html.xpath(
+                    './/span[contains(text(), "Species Reactivity")]/following-sibling::i/text()'
+                )[0]
+                .strip()
+                .replace(" ", ", ")
+            )
+        except Exception:
+            return None
+        return species_reactivity
+
+    def immunogen(self, html):
+        try:
+            immunogen = html.xpath(
+                './/span[contains(text(), "Immunogen Description")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return immunogen
+
+    def swissprot(self, html):
+        try:
+            accessionNo = html.xpath(
+                './/span[contains(text(), "Accession No.")]/following-sibling::i//text()'
+            )
+            noText = " ".join(i for i in accessionNo)
+            if "Swiss-Prot#:" in noText:
+                swissprot = noText.split("Swiss-Prot#: ")[1].split(" ")[0]
+            elif "Swiss-Prot:" in noText:
+                swissprot = noText.split("Swiss-Prot: ")[1].split(" ")[0]
+        except Exception:
+            return None
+        return swissprot
+
+    def predicted_mw(self, html):
+        try:
+            predicted_mw = html.xpath(
+                './/span[contains(text(), "Calculated MW")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return predicted_mw
+
+    def observed_mw(self, html):
+        # SDS obs  Cal pre
+        try:
+            observed_mw = html.xpath(
+                './/span[contains(text(), "SDS-PAGE MW")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return observed_mw
+
+    def isotype(self, html):
+        try:
+            isotype = html.xpath(
+                './/span[contains(text(), "Isotype")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return isotype
+
 
 if __name__ == "__main__":
     for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-4707-PKC-theta-Antibody-29261.html"
+        url = "https://www.sabbiotech.com.cn/g-216158-SEMA6D-Rabbit-Polyclonal-Antibody-29278.html"
         if "-Conjugated-" in url:
             continue
         lxml = Signalway().format(url)
@@ -182,4 +320,16 @@ if __name__ == "__main__":
         antibody_type = Signalway().antibody_type(lxml)
         sellable = Signalway().sellable(lxml)
         synonyms = Signalway().synonyms(lxml)
-        print(synonyms)
+        application = Signalway().application(lxml)
+        clone_number = Signalway().clone_number(lxml)
+        modified = Signalway().modified(lxml)
+        host_species = Signalway().host_species(lxml)
+        antibody_detail_url = Signalway().antibody_detail_url(url)
+        geneid = Signalway().geneid(lxml)
+        species_reactivity = Signalway().species_reactivity(lxml)
+        immunogen = Signalway().immunogen(lxml)
+        swissprot = Signalway().swissprot(lxml)
+        predicted_mw = Signalway().predicted_mw(lxml)
+        observed_mw = Signalway().observed_mw(lxml)
+        isotype = Signalway().isotype(lxml)
+        print(isotype)
