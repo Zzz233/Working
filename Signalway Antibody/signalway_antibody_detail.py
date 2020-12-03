@@ -127,12 +127,59 @@ class Signalway(object):
         with requests.Session() as s:
             resp = s.get(url=url, headers=self.headers)
             x = etree.HTML(resp.text)
-            y = x.xpath('//div[@class="container"]')
+            y = x.xpath('//div[@class="detail"]')[0]
         return y
+
+    def brand(self):
+        return "Signalway Antibody"
+
+    def catalog_number(self, html):
+        catalog_number = html.xpath(".//h2/text()")[0].split("#")[1]
+        return catalog_number
+
+    def product_name(self, html):
+        product_name = html.xpath(".//h2/text()")[0].split("#")[0]
+        return product_name
+
+    def antibody_type(self, html):
+        try:
+            antibody_type = html.xpath(
+                './/span[contains(text(), "Clonality")]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return antibody_type
+
+    def sellable(self, html):
+        try:
+            yes = (
+                html.xpath('.//span[contains(text(), "Yes")]/text()')[0].strip().lower()
+            )
+        except Exception:
+            return "no"
+        if yes == "yes":
+            return yes
+
+    def synonyms(self, html):
+        try:
+            synonyms = html.xpath(
+                './/span[@class="altive"]/following-sibling::i/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return synonyms
 
 
 if __name__ == "__main__":
     for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-11294-Histone-H3(mono-methyl-K79)-Mouse-Monoclonal-Antibody-(1E10)-HW044.html"
-        lxml = Signalway().format()
-        print(lxml)
+        url = "https://www.sabbiotech.com.cn/g-4707-PKC-theta-Antibody-29261.html"
+        if "-Conjugated-" in url:
+            continue
+        lxml = Signalway().format(url)
+        brand = Signalway().brand()
+        catalog_number = Signalway().catalog_number(lxml)
+        product_name = Signalway().product_name(lxml)
+        antibody_type = Signalway().antibody_type(lxml)
+        sellable = Signalway().sellable(lxml)
+        synonyms = Signalway().synonyms(lxml)
+        print(synonyms)
