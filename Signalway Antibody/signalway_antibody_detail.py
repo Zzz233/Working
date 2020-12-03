@@ -363,10 +363,65 @@ class Signalway(object):
     def Note(self):
         return None
 
+    # ======================================================================== #
+    # application表
+    def sub_application(self, html):
+        return None
+
+    # ======================================================================== #
+    # price表
+    def sub_price(self, html):
+        results = []
+        try:
+            trs = html.xpath('.//table[@class="table table-borderless"]/tbody/tr')
+        except Exception:
+            return results
+        for item in trs:
+            sub_num = item.xpath(".//td//text()")[0].strip()
+            sub_siz = item.xpath(".//td//text()")[1].strip()
+            sub_pri = item.xpath(".//td//text()")[2].strip()
+            results.append([sub_num, sub_siz, sub_pri])
+        return results
+
+    # ======================================================================== #
+    # Citations表
+    def sub_citations(self, html):
+        results = []
+        try:
+            spans = html.xpath('.//span[@class="list_item1"]')
+            for item in spans:
+                text = item.xpath(".//text()")
+                title = "".join(i for i in text).split("  PMID: ")[0].strip()
+                pmid = item.xpath(".//a/text()")[0].split("PMID:")[1].strip()
+                link = item.xpath(".//a/@href")[0].strip()
+                results.append([pmid, title, link])
+        except Exception:
+            return results
+        return results
+
+    # ======================================================================== #
+    # images表
+    def sub_images(self, html):
+        results = []
+        try:
+            lis = html.xpath(
+                './/span[contains(text(), "Images")]/../following-sibling::div[@class="content"]/ul/li'
+            )
+        except Exception:
+            return results
+        for item in lis:
+            img_url = (
+                "https://www.sabbiotech.com.cn/"
+                + item.xpath(".//span/img/@src")[0].strip()
+            )
+            img_des = item.xpath(".//i/text()")[0].strip()
+            results.append([img_url, img_des])
+        return results
+
 
 if __name__ == "__main__":
     for i in range(1):
-        url = "https://www.sabbiotech.com.cn/g-11294-Histone-H3(mono-methyl-K79)-Mouse-Monoclonal-Antibody-(1E10)-HW044.html"
+        url = "https://www.sabbiotech.com.cn/g-216158-SEMA6D-Rabbit-Polyclonal-Antibody-29278.html"
         if "-Conjugated-" in url:
             continue
         lxml = Signalway().format(url)
@@ -392,4 +447,9 @@ if __name__ == "__main__":
         citations = Signalway().citations(lxml)
         dataSheet_url = Signalway().dataSheet_url(lxml)
         image_qty = Signalway().image_qty(lxml)
-        print(image_qty)
+
+        sub_price = Signalway().sub_price(lxml)
+
+        sub_citations = Signalway().sub_citations(lxml)
+        sub_images = Signalway().sub_images(lxml)
+        print(sub_images)
