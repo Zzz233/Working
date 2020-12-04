@@ -142,7 +142,8 @@ class Alomone:
         return catano
 
     def product_name(self, html):
-        name = html.xpath('.//h1[@id="producttitle"]/text()')[0].strip()
+        text = html.xpath('.//h1[@id="producttitle"]//text()')
+        name = "".join(i for i in text)
         return name
 
     def antibody_type(self, html):
