@@ -185,8 +185,8 @@ class Alomone:
             application = None
         return application
 
-    def conjugated(self):
-        return None
+    def conjugated(self, name):
+        return name
 
     def clone_number(self):
         return None
@@ -299,21 +299,13 @@ class Alomone:
         return purify
 
     def citations(self, html):
-        if html.xpath(
-            './/div[@class="show-multifield multifield2 ctextfie' 'ld ab_references "]'
-        ):
+        try:
             citations = len(
-                html.xpath(
-                    './/div[@class="show-multifield multifield2 ctextfield ab_refer'
-                    'ences "]//li[@class]'
-                )
+                html.xpath('.//div[@id="tab-citation_tab"]//*[@class="line-text"]')
             )
-        else:
+        except Exception:
             citations = 0
         return citations
-        # if html.xpath(
-        #         './/span[@class="ctextlabel"][contains(text(), "References")]'):
-        #     print(1)
 
     def citations_url(self):
         return None
@@ -369,33 +361,23 @@ class Alomone:
 
     # ======================================================================== #
     # citations表
-    def sub_citations(self, citations, html):
-        if citations > 0:
-            sub_citations = html.xpath(
-                './/div[@class="show-multifield multifield2 ctextfield ab_refer'
-                'ences "]//li[@class]'
-            )
-            results = []
-            for sub in sub_citations:
-                if sub.xpath('.//a[@data-wpel-link="external"]/@href'):
-                    try:
-                        title_list = sub.xpath('.//span[@class="line-text"]//text()')
-                        title = "".join(i for i in title_list).strip()
-                    except Exception:
-                        continue
-                    pubmed_url = sub.xpath('.//a[@data-wpel-link="external"]/@href')[0]
-                else:
-                    title = None
-                    pubmed_url = None
-                if pubmed_url is None:
-                    pmid = None
-                elif "www.ncbi.nlm.nih.gov/pubmed/" in pubmed_url:
-                    pmid = pubmed_url.split("gov/pubmed/")[1]
-                else:
-                    pmid = None
-                results.append([pubmed_url, pmid, title])
-        else:
-            results = []
+    def sub_citations(self, html):
+        results = []
+        table = html.xpath('.//div[@id="tab-citation_tab"]//*[@class="line-text"]')
+        for item in table:
+            title = "".join(i for i in item.xpath(".//text()"))
+            try:
+                cit_url = item.xpath('.//a[@data-wpel-link="external"]/@href')[0]
+            except Exception:
+                cit_url = None
+            if cit_url is None:
+                pmid = None
+            elif "www.ncbi.nlm.nih.gov/pubmed/" in cit_url:
+                pmid = cit_url.split("gov/pubmed/")[1].strip()
+            else:
+                pmid = None
+            # print(title, cit_url, pmid)
+            results.append([title, cit_url, pmid])
         return results
 
     # ======================================================================== #
@@ -427,7 +409,7 @@ class Alomone:
 def main():
     while r.exists("alomone_list"):
         url = r.lpop("alomone_list")
-        # url = "https://www.alomone.com/p/anti-kv1/APC-127"
+        # url = "https://www.alomone.com/p/anti-kca1-1-1097-1196/APC-021"
         try:
             html, status = Alomone().format(url)
         except Exception as e:
@@ -439,6 +421,7 @@ def main():
             brand = Alomone().brand()
             catalog_number = Alomone().catalog_number(html)
             product_name = Alomone().product_name(html)
+            conjugated = Alomone().conjugated(product_name)
             antibody_type = Alomone().antibody_type(html)
             sellable = Alomone().sellable(html)
             synonyms = Alomone().synonyms(html)
@@ -455,9 +438,10 @@ def main():
             citations = Alomone().citations(html)
             image_qty = Alomone().image_qty(html)
             sub_application = Alomone().sub_application(application, html)
-            sub_citations = Alomone().sub_citations(citations, html)
-            sub_images = Alomone().sub_images(citations, html)
+            sub_citations = Alomone().sub_citations(html)
+            sub_images = Alomone().sub_images(image_qty, html)
             price_url = Alomone().price_url(html)
+            # print(sub_citations)
             # print(
             #     brand,
             #     catalog_number,
@@ -488,6 +472,7 @@ def main():
                 Catalog_Number=catalog_number,
                 Product_Name=product_name,
                 Antibody_Type=antibody_type,
+                Conjugated=conjugated,
                 Sellable=sellable,
                 Synonyms=synonyms,
                 Application=application,
@@ -520,9 +505,9 @@ def main():
             if sub_citations:
                 objects_sub_citations = []
                 for sub in sub_citations:
-                    sub_pmid = sub[1]
-                    sub_pubmed_url = sub[0]
-                    sub_title = sub[2]
+                    sub_pmid = sub[2]
+                    sub_pubmed_url = sub[1]
+                    sub_title = sub[0]
                     if sub_title is None:
                         continue
                     new_citations = Citations(
@@ -556,7 +541,7 @@ def main():
                 r.rpush("alomone_list", url)
                 session.rollback()
                 print(e)
-            time.sleep(random.uniform(2, 2.5))
+            time.sleep(random.uniform(1.5, 2.5))
 
 
 if __name__ == "__main__":
