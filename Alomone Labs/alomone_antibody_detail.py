@@ -102,10 +102,9 @@ class Images(Base):
     Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
 
 
-# pool = redis.ConnectionPool(host='localhost', port=6379, decode_responses=True,
-#                             db=1)
-# r = redis.Redis(connection_pool=pool)
-#
+pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
+r = redis.Redis(connection_pool=pool)
+
 engine = create_engine(
     "mysql+pymysql://root:biopicky!2019@127.0.0.1:3306/biopick?charset=utf8"
 )
@@ -228,7 +227,7 @@ class Alomone:
         if html.xpath('.//div[@class="ctextfield title ab_uniprotnumber"]'):
             geneid = html.xpath(
                 './/div[@class="ctextfield title ab_unipro'
-                'tnumber"]/span[@class="ctextvalue "]/text()'
+                'tnumber"]/span[@class="ctextvalue "]//text()'
             )[0].strip()
         else:
             geneid = None
@@ -378,12 +377,23 @@ class Alomone:
             )
             results = []
             for sub in sub_citations:
-                pubmed_url = sub.xpath(".//a[@data-wpel-li" 'nk="external"]/@href')[0]
-                if "www.ncbi.nlm.nih.gov/pubmed/" in pubmed_url:
+                if sub.xpath('.//a[@data-wpel-link="external"]/@href'):
+                    try:
+                        title_list = sub.xpath('.//span[@class="line-text"]//text()')
+                        title = "".join(i for i in title_list).strip()
+                    except Exception:
+                        continue
+                    pubmed_url = sub.xpath('.//a[@data-wpel-link="external"]/@href')[0]
+                else:
+                    title = None
+                    pubmed_url = None
+                if pubmed_url is None:
+                    pmid = None
+                elif "www.ncbi.nlm.nih.gov/pubmed/" in pubmed_url:
                     pmid = pubmed_url.split("gov/pubmed/")[1]
                 else:
                     pmid = None
-                results.append([pubmed_url, pmid])
+                results.append([pubmed_url, pmid, title])
         else:
             results = []
         return results
@@ -415,10 +425,17 @@ class Alomone:
 
 
 def main():
-    for i in range(1):
-        url = "https://www.alomone.com/p/anti-gipc1/APZ-045"
-        html, status = Alomone().format(url)
+    while r.exists("alomone_list"):
+        url = r.lpop("alomone_list")
+        # url = "https://www.alomone.com/p/anti-kv1/APC-127"
+        try:
+            html, status = Alomone().format(url)
+        except Exception as e:
+            print(e)
+            r.rpush("alomone_list", url)
+            continue
         if status:
+            print(url)
             brand = Alomone().brand()
             catalog_number = Alomone().catalog_number(html)
             product_name = Alomone().product_name(html)
@@ -441,98 +458,105 @@ def main():
             sub_citations = Alomone().sub_citations(citations, html)
             sub_images = Alomone().sub_images(citations, html)
             price_url = Alomone().price_url(html)
-            # print(price_url)
-            print(
-                brand,
-                catalog_number,
-                product_name,
-                antibody_type,
-                sellable,
-                synonyms,
-                application,
-                host_species,
-                antibody_detail_url,
-                ko_validation,
-                species_reactivity,
-                swissprot,
-                geneid,
-                immunogen,
-                isotype,
-                purify,
-                citations,
-                image_qty,
-                price_url,
-                sub_application,
-                sub_citations,
-                sub_images,
+            # print(
+            #     brand,
+            #     catalog_number,
+            #     product_name,
+            #     antibody_type,
+            #     sellable,
+            #     synonyms,
+            #     application,
+            #     host_species,
+            #     antibody_detail_url,
+            #     ko_validation,
+            #     species_reactivity,
+            #     swissprot,
+            #     geneid,
+            #     immunogen,
+            #     isotype,
+            #     purify,
+            #     citations,
+            #     image_qty,
+            #     price_url,
+            #     sub_application,
+            #     sub_citations,
+            #     sub_images,
+            # )
+
+            new_detail = Detail(
+                Brand=brand,
+                Catalog_Number=catalog_number,
+                Product_Name=product_name,
+                Antibody_Type=antibody_type,
+                Sellable=sellable,
+                Synonyms=synonyms,
+                Application=application,
+                Host_Species=host_species,
+                Antibody_detail_URL=antibody_detail_url,
+                KO_Validation=ko_validation,
+                Species_Reactivity=species_reactivity,
+                SwissProt=swissprot,
+                GeneId=geneid,
+                Immunogen=immunogen,
+                Isotype=isotype,
+                Purify=purify,
+                Citations=str(citations),
+                Image_qty=image_qty,
+                Price_url=price_url,
             )
+            session.add(new_detail)
 
-            # new_detail = Detail(Brand=brand,
-            #                     Catalog_Number=catalog_number,
-            #                     Product_Name=product_name,
-            #                     Antibody_Type=antibody_type,
-            #                     Sellable=sellable,
-            #                     Synonyms=synonyms,
-            #                     Application=application,
-            #                     Host_Species=host_species,
-            #                     Antibody_detail_URL=antibody_detail_url,
-            #                     KO_Validation=ko_validation,
-            #                     Species_Reactivity=species_reactivity,
-            #                     SwissProt=swissprot,
-            #                     GeneId=geneid,
-            #                     Immunogen=immunogen,
-            #                     Isotype=isotype,
-            #                     Purify=purify,
-            #                     Citations=str(citations),
-            #                     Image_qty=image_qty,
-            #                     Price_url=price_url)
-            # session.add(new_detail)
+            if sub_application:
+                objects_sub_application = []
+                for sub in sub_application:
+                    sub_application = sub[0]
+                    new_application = Application(
+                        Catalog_Number=catalog_number,
+                        Application=sub_application,
+                    )
+                    objects_sub_application.append(new_application)
+                session.bulk_save_objects(objects_sub_application)
 
-            # if sub_application:
-            #     objects_sub_application = []
-            #     for sub in sub_application:
-            #         sub_application = sub[0]
-            #         new_application = Application(
-            #             Catalog_Number=catalog_number,
-            #             Application=sub_application,
-            #         )
-            #         objects_sub_application.append(new_application)
-            #     session.bulk_save_objects(objects_sub_application)
+            if sub_citations:
+                objects_sub_citations = []
+                for sub in sub_citations:
+                    sub_pmid = sub[1]
+                    sub_pubmed_url = sub[0]
+                    sub_title = sub[2]
+                    if sub_title is None:
+                        continue
+                    new_citations = Citations(
+                        Catalog_Number=catalog_number,
+                        Article_title=sub_title,
+                        PMID=sub_pmid,
+                        Pubmed_url=sub_pubmed_url,
+                    )
+                    objects_sub_citations.append(new_citations)
+                session.bulk_save_objects(objects_sub_citations)
 
-            # if sub_citations:
-            #     objects_sub_citations = []
-            #     for sub in sub_citations:
-            #         sub_pmid = sub[1]
-            #         sub_pubmed_url = sub[0]
+            if sub_images:
+                objects_sub_images = []
+                for sub in sub_images:
+                    sub_image_url = sub[0]
+                    sub_description = sub[1]
 
-            #         new_citations = Citations(
-            #             Catalog_Number=catalog_number,
-            #             PMID=sub_pmid,
-            #             Pubmed_url=sub_pubmed_url,
-            #         )
-            #         objects_sub_citations.append(new_citations)
-            #     session.bulk_save_objects(objects_sub_citations)
+                    new_images = Images(
+                        Catalog_Number=catalog_number,
+                        Image_url=sub_image_url,
+                        Image_description=sub_description,
+                    )
+                    objects_sub_images.append(new_images)
+                session.bulk_save_objects(objects_sub_images)
 
-            # if sub_images:
-            #     objects_sub_images = []
-            #     for sub in sub_images:
-            #         sub_image_url = sub[0]
-            #         sub_description = sub[1]
-
-            #         new_images = Images(Catalog_Number=catalog_number,
-            #                             Image_url=sub_image_url,
-            #                             Image_description=sub_description)
-            #         objects_sub_images.append(new_images)
-            #     session.bulk_save_objects(objects_sub_images)
-
-            # try:
-            #     session.commit()
-            #     session.close()
-            #     print('done')
-            # except Exception as e:
-            #     session.rollback()
-            #     print(e)
-            # time.sleep(random.uniform(1, 1.5))
+            try:
+                session.commit()
+                session.close()
+                print("done")
+            except Exception as e:
+                r.rpush("alomone_list", url)
+                session.rollback()
+                print(e)
+            time.sleep(random.uniform(2, 2.5))
 
 
 if __name__ == "__main__":
