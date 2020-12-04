@@ -136,16 +136,14 @@ class Alomone:
         return "Alomone Labs"
 
     def catalog_number(self, html):
-        catano = (
-            html.xpath('.//span[@class="sku"][@ite' 'mprop="sku"]/text()')[0]
-            .split("In wishlist")[0]
-            .strip()
-        )
+        catano = html.xpath('.//span[@class="sku"][@ite' 'mprop="sku"]/text()')[
+            0
+        ].strip()
         return catano
 
     def product_name(self, html):
         text = html.xpath('.//h1[@id="producttitle"]//text()')
-        name = "".join(i for i in text)
+        name = "".join(i for i in text).split("In wishlist")[0].strip()
         return name
 
     def antibody_type(self, html):
