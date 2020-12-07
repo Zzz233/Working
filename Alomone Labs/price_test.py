@@ -67,19 +67,3 @@ while r.exists("alomone_price"):
     session.close()
     print("done")
     time.sleep(1)
-
-    #     json_str = html.xpath("//form/@data-product_variations")[0]
-    #     a = json.loads(json_str)
-    #     for attributes in a:
-    #         urlencode_str = attributes["attributes"]["attribute_pa_size"]
-    #         size = urllib.parse.unquote(urlencode_str)
-    #         price = "$ " + str(attributes["display_price"])
-    #         catano = attributes["sku"]
-    #         print(catano, size, price)
-    #         new_price = Price(Catalog_Number=catano, Size=size, Price=Price)
-    #     results.append(new_price)
-    # session.bulk_save_objects(results)
-    # session.commit()
-    # session.close()
-    # print("done")
-    # time.sleep(1)
