@@ -32,7 +32,7 @@ session = DBSession()
 
 
 headers = {
-    "Host": "www.abcam.com",
+    "Host": "www.abcam.cn",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0",
     "Accept": "*/*",
     "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
@@ -40,16 +40,16 @@ headers = {
     "X-NewRelic-ID": "VQIAU1ZQGwsDU1JQBw==",
     "X-Requested-With": "XMLHttpRequest",
     "Connection": "keep-alive",
-    "Referer": "https://www.abcam.com/products?selected.productType=Kits",
-    # "Cookie": "ak_bmsc=DCC7D3409949248ACE21FD7DB9530361173CA86670680000F090CD5FFDDADF2A~plqzVvM00JrTXN3NrN0w1foPcjVP3oNbpYhZhCS7fe3yEUvGZSOoep9j6KsHM2RrTxl6I+St1UySz62yaRON9o63CYwY2MPepDPYlcR/vGBxJYWy5yL0oYM/8uiUl2bQ8bhiftbqSucorLEqZB31Bdxv4JXt3hxhJnzqF+dMPorPalgoLYFhxqEmsLzLxSzYiRbrbS+epoVxxyyrDqgpTTtxq6+XXvzd4eTZeYgRlCXeZZFohq3AFrlvnrAc72W1l2; _gcl_au=1.1.2112752315.1607307507; _sp_ses.2495=*; _sp_id.2495=9e72eec18705b3ae.1607307507.1.1607307799.1607307507.ee9e212d-fb94-4db7-a213-bd1ba38e88b1; _hjTLDTest=1; _hjid=6979f514-0f00-4425-ae38-8d0916685a5e; _hjFirstSeen=1; PP=1; check=true; mbox=session#aa6a97755bbb400daeffefc3f8dcadb4#1607309369|PC#aa6a97755bbb400daeffefc3f8dcadb4.35_0#1670552388; C2LC=US; JSESSIONID=5C45C7025AC72371307E34D8749A4CD9.Pub2; bm_sv=36DDF4CCBF8DE202D67BC57E9DD85827~VeTKkPuEvYywHV7/sr1Yfa91vu+awKksVpl9Eo3lv7fOxgzgDTEvq2pUl4Arn/4yfbsD3Nfw4NoVSwWGs0lk9SDexyx3icQr5PPyeh0rv8Xw3zA4o8Cw4ppp6dm34rGaX+W5+oSBZZ0EdvIdRndgub7BF52lz1ela2np71xdtWo=; _hjIncludedInPageviewSample=1; _hjAbsoluteSessionInProgress=1; _hjIncludedInSessionSample=1; _ga=GA1.2.844532259.1607307510; _gid=GA1.2.1618503788.1607307510; _gac_UA-367099-1=1.1607307575.EAIaIQobChMIn5rI_ua67QIVZxitBh02xwi7EAAYAiAAEgKQGPD_BwE; mboxEdgeCluster=35; _hjShownFeedbackMessage=true; _mibhv=anon-1607307512962-5163650945_7395; _fbp=fb.1.1607307513195.1365994282; _uetsid=abf78650383211ebb092a580b1f0a3c0; _uetvid=abf78300383211ebb4284babe6eb8d5b",
+    "Referer": "https://www.abcam.cn/products?sortOptions=Relevance&selected.classification=ELISA%20and%20Matched%20Antibody%20Pair%20Kits--ELISA%20Kits%20and%20Reagents--ELISA",
+    "Cookie": "_sp_id.4591=8143265cdee71a36.1607303447.4.1607323156.1607310390.acf31b3b-bfb1-4f09-b8fa-988f9e45e8c6; Hm_lvt_30fac56dd55db0f4c94ac39955a1d1f1=1607303447; Hm_lpvt_30fac56dd55db0f4c94ac39955a1d1f1=1607323095; PP=1; C2LC=CN; _gcl_au=1.1.1278091111.1607303448; Qs_lvt_186141=1607303448; Qs_pv_186141=1978628143855239200%2C876172786810121000%2C2711236939431772000%2C2412310853606670300%2C3634332151587046400; check=true; mbox=PC#519a7b07ff1c43a2a702068b20209d3b.35_0#1670567896|session#e5ee7e9af6b049b29e157b8a4906d7a3#1607323370; _ga=GA1.2.356824111.1607303450; _gid=GA1.2.587176512.1607303450; mediav=%7B%22eid%22%3A%2295155%22%2C%22ep%22%3A%22%22%2C%22vid%22%3A%22RJjoU%60hWjT9%24FZ'%233!a2%22%2C%22ctn%22%3A%22%22%2C%22vvid%22%3A%22RJjoU%60hWjT9%24FZ'%233!a2%22%2C%22_mvnf%22%3A1%2C%22_mvctn%22%3A0%2C%22_mvck%22%3A0%2C%22_refnf%22%3A0%7D; _mibhv=anon-1607303455074-6650784431_8620; ak_bmsc=3640B22DEF6F44243D0ADC75F77615C1D2C07717E75C0000A4C7CD5F19FE233A~ply/+ZJmfUGOsO9yxStJivrMYEw2hgHOWTfLovmj/ME4gu7+KQRB47MG+Lb8mXIwhHybhLG7QGdcWzp73DdpywiLcQaRMN4Blpv36aNkQ+8ALF8aFlDxZC1+XBaOniNBfjlbwZBn840qRAZeIF5P3WctKbJriLCZVAbaNhS0fYq4XJTadBZqGYnK3W4n/eLUJvtcfEnNjXBlNCsaCa8ZV5w3JVRF7+cJALOEXUOiMNfcsFcr38XiVWZ/GEeZBJZJJK; _sp_ses.4591=*; JSESSIONID=F03095EE8FBEC0F3116460A8A019B0DC.Pub2; bm_sv=B03D599ABCCD59C56D014FC028C5B38E~kjinP/qKSUCGVavxoomPA1VbsBGFaJHRD9v3IF+F1eRme1zLBtkOVkiWtcSJPxktQio1pauP0VuMdRU9LS2vFydun584feNpmGueQLaZTXRrFS20tFKbxZGv0edMjHoiUhppn5e3lHVUq2bpmQCoq/PDXgNUA3UWrLyUasJ15yM=; mboxEdgeCluster=35; _uetsid=647fa3d0383111eb96821173e067000b; _uetvid=64804db0383111ebba642974ece6f04c; _dc_gtm_UA-367099-9=1",
     "Pragma": "no-cache",
     "Cache-Control": "no-cache",
     "TE": "Trailers",
 }
 
-for i in range(1, 408):
-    objects = []
-    url = f"https://www.abcam.com/products/loadmore?selected.productType=Kits&pagenumber={i}"
+for i in range(1, 59):
+    # objects = []
+    url = f"https://www.abcam.cn/products/loadmore?sortOptions=Relevance&selected.classification=ELISA and Matched Antibody Pair Kits--ELISA Kits and Reagents--SimpleStep ELISA™&pagenumber={i}"
 
     with requests.Session() as s:
         resp = s.get(url=url, headers=headers, timeout=60)
@@ -58,14 +58,27 @@ for i in range(1, 408):
         for item in products:
             name = item.xpath(".//@data-productname")[0].strip()
             catano = item.xpath(".//@data-productcode")[0].strip()
-            link = "https://www.abcam.com" + item.xpath(".//h3/a/@href")[0].strip()
+            link = "https://www.abcam.cn" + item.xpath(".//h3/a/@href")[0].strip()
             # print(catano, name, link)
             new_data = Data(
                 Brand="abcam", Catalog_Number=catano, Product_Name=name, Detail_url=link
             )
-            objects.append(new_data)
-    session.bulk_save_objects(objects)
-    session.commit()
-    session.close()
+            session.add(new_data)
+            try:
+                session.commit()
+                session.close()
+            except Exception as e:
+                print(e)
+                session.rollback()
     print(i, "done")
     time.sleep(random.uniform(1.0, 2.0))
+    #         objects.append(new_data)
+    # session.bulk_save_objects(objects)
+    # try:
+    #     session.commit()
+    #     session.close()
+    # except Exception as e:
+    #     print(e)
+    #     session.rollback()
+    # print(i, "done")
+    # time.sleep(random.uniform(1.0, 2.0))
