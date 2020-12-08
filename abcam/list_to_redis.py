@@ -61,11 +61,11 @@ session = DBSession()
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
 r = redis.Redis(connection_pool=pool)
 
-# task_list = session.query(Data.Detail_url).all()
-task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
+task_list = session.query(Data.Detail_url).all()
+# task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
 for i in task_list:
     item = i[0]
-    r.rpush("abcam_citations_extra", item)
+    r.rpush("abcam_detail", item)
     print(i[0])
 
 pool.disconnect()

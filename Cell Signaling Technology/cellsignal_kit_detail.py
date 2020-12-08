@@ -13,7 +13,7 @@ Base = declarative_base()
 
 
 class Detail(Base):
-    __tablename__ = "abcam_elisa_kit_detail"
+    __tablename__ = "cellsignal_elisa_kit_detail"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -43,7 +43,7 @@ class Detail(Base):
 
 
 class Citations(Base):
-    __tablename__ = "abcam_elisa_kit_citations"
+    __tablename__ = "cellsignal_elisa_kit_citations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -58,7 +58,7 @@ class Citations(Base):
 
 
 class Images(Base):
-    __tablename__ = "abcam_elisa_kit_images"
+    __tablename__ = "cellsignal_elisa_kit_images"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -70,7 +70,7 @@ class Images(Base):
 
 
 class Price(Base):
-    __tablename__ = "abcam_elisa_kit_price"
+    __tablename__ = "cellsignal_elisa_kit_price"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -93,7 +93,7 @@ pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, 
 r = redis.Redis(connection_pool=pool)
 
 
-class Abcam(object):
+class CellSignal(object):
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/5"
         "37.36 (KHTML, like Gecko) Chrome/87.0.4280.66 Safari/537.36",
@@ -104,7 +104,7 @@ class Abcam(object):
             resp = s.get(url=url, headers=self.headers, timeout=120)
             html_lxml = etree.HTML(resp.text)
             try:
-                content = html_lxml.xpath('//div[@id="frame"]')[
+                content = html_lxml.xpath('//div[@class="container-fluid"]')[
                     0
                 ]  # ! <xpath lxml>  None
             except Exception:
@@ -112,23 +112,24 @@ class Abcam(object):
         return content
 
     def brand(self):
-        return "abcam"
+        return "cellsignal"
 
     def kit_type(self):
         return "elisa kit"
 
     def catalog_number(self, html):
         try:
-            catnum = html.xpath(
-                './/div[@id="datasheet-header-container"]/@data-product-code'
-            )[0].strip()
+            catnum = html.xpath('.//div[@class="pdp-page-header"]/@data-product-id')[
+                0
+            ].strip()
         except Exception:
             catnum = None
         return catnum
 
     def product_name(self, html):
         try:
-            name = html.xpath('.//h1[@class="title"]/text()')[0].strip()
+            name_list = html.xpath('.//h1[@class="title"]//text()')
+            name = "".join(i for i in name_list).strip()
         except Exception:
             name = None
         return name
@@ -137,11 +138,14 @@ class Abcam(object):
         return url
 
     def tests(self, html):  # 48T/96T 使用次数 规格
-        # ajax
         try:
-            tests = html.xpath(
-                './/th[contains(text(), "组件")]/following-sibling::th/text()'
-            )[0].strip()
+            tests_mul = html.xpath('.//td[@class="product-size"]')
+            results = []
+            for item in tests_mul:
+                tests_list = item.xpath(".//text()")
+                tests_single = "".join(i for i in tests_list).strip()
+                results.append(tests_single)
+            tests = ",".join(n for n in results)
         except Exception:
             tests = None
         return tests
@@ -208,48 +212,40 @@ class Abcam(object):
             assay_range = None
         return assay_range
 
-    def specificity(self):
-        return None
+    def specificity(self, html):
+        try:
+            specificity_list = html.xpath(
+                './/h3[contains(text(), "特异性/敏感性")]/following-sibling::p[1]//text()'
+            )
+            specificity = "".join(i for i in specificity_list)
+        except Exception:
+            specificity = None
+        return specificity
 
     def target_protein(self):
         return None
 
     def geneid(self, html):
         try:
-            geneid = (
-                html.xpath(
-                    './/a[@class="dsIcon extLink"][contains(text(), "Entrez Gene:")]/text()'
-                )[0]
-                .replace("\r\n", "")
-                .replace("Entrez Gene:", "")
-                .strip()
-            )
+            geneid_list = html.xpath('.//p[@id="current-product-entrez"]/a/text()')
+            geneid = ", ".join(i for i in geneid_list)
         except Exception:
             geneid = None
         return geneid
 
     def swissprot(self, html):
         try:
-            swissprot = (
-                html.xpath(
-                    './/a[@class="dsIcon extLink"][contains(text(), "SwissProt:")]/text()'
-                )[0]
-                .replace("\r\n", "")
-                .replace("SwissProt:", "")
-                .strip()
-            )
+            swissprot_list = html.xpath('.//p[@id="current-product-swiss"]/a/text()')
+            swissprot = ", ".join(i for i in swissprot_list)
         except Exception:
             swissprot = None
         return swissprot
 
     def datasheet_url(self, html):
         try:
-            datasheet_url = (
-                "https://www.abcam.cn"
-                + html.xpath(
-                    './/ul[@class="pdf-links"]/li/a/span[contains(text(), "Datasheet")]/../@href'
-                )[0].strip()
-            )
+            datasheet_url = html.xpath('.//i[@class="cstf cstf-datasheet"]/../@href')[
+                0
+            ].strip()
         except Exception:
             datasheet_url = None
         return datasheet_url
@@ -263,18 +259,21 @@ class Abcam(object):
 
     def image_qty(self, html):
         try:
-            image_qty = len(html.xpath('.//ul[@class="images"]/li[@id]'))
+            image_qty = len(
+                html.xpath(
+                    './/div[@data-app-id][@class][@data-figure-type="image"][@data-product-id]/div[@class="imgWrapper"]'
+                )
+            )
         except Exception:
             image_qty = 0
         return image_qty
 
     def citations(self, html):
         try:
-            citations = int(
-                html.xpath('.//h2[@class="h3"][contains(text(),"文献")]/span/text()')[0]
-                .replace("(", "")
-                .replace(")", "")
-                .strip()
+            citations = len(
+                html.xpath(
+                    './/div[@id="pdpManualCitations"]/ul/li[@class="OneLinkNoTx"]'
+                )
             )
         except Exception:
             citations = 0
@@ -295,78 +294,99 @@ class Abcam(object):
 
     # ======================================================================== #
     # Citations表
-    def sub_citations(self, html):
-        return None
+    def sub_citations(self, citations, html):
+        results = []
+        if citations == 0:
+            return results
+        else:
+            lis = html.xpath(
+                './/div[@id="pdpManualCitations"]/ul/li[@class="OneLinkNoTx"]'
+            )
+            for li in lis:
+                pm_url = li.xpath("./a/@href")[0].strip()
+                if "www.ncbi.nlm.nih.gov/pubmed/" in pm_url:
+                    pmid = pm_url.split("gov/pubmed/")[1].strip()
+                else:
+                    pmid = None
+                title_list = li.xpath("./a//text()")
+                title = "".join(i for i in title_list)
+                results.append([pmid, title, pm_url])
+        return results
 
     # ======================================================================== #
     # Images表
-    def sub_images(self, html):
+    def sub_images(self, image_qty, html):
         results = []
-        try:
-            lis = html.xpath('.//ul[@class="images"]/li[@id]')
-        except Exception:
+        if image_qty == 0:
             return results
-        for li in lis:
-            try:
-                img_url = li.xpath('./div[@class="column image gallery"]/a/@href')[
-                    0
-                ].strip()
-            except Exception:
-                continue
-            try:
-                dec_list = li.xpath('.//div[@class="column description"]//text()')
-                img_dec = "".join(i for i in dec_list)
-            except Exception:
-                img_dec = None
-            results.append([img_url, img_dec])
+        else:
+            divs = html.xpath(
+                './/div[@data-app-id][@class][@data-figure-type="image"][@data-product-id]/div[@class="imgWrapper"]'
+            )
+            for div in divs:
+                img_url = div.xpath("./img[@data-lazy]/@data-lazy")[0].strip()
+                img_dec_list = div.xpath("./../p//text()")
+                img_dec = "".join(i for i in img_dec_list)
+                results.append([img_url, img_dec])
         return results
 
     # ======================================================================== #
     # Price
     def sub_price(self, html):
-        pass
+        results = []
+        try:
+            trs = html.xpath(".//tr[@data-skuid]")
+        except Exception:
+            return results
+        for tr in trs:
+            sub_cata = tr.xpath("./@data-skuid")[0].strip()
+            sub_size_list = tr.xpath('./td[@class="product-size"]//text()')
+            sub_size = "".join(i for i in sub_size_list).strip()
+            results.append([sub_cata, sub_size])
+        return results
 
 
 if __name__ == "__main__":
     # for i in range(1):
-    while r.exists("abcam_detail"):
-        extract = r.rpop("abcam_detail")
-        # extract = "https://www.abcam.cn/human-tnf-alpha-elisa-kit-ab181421.html"
+    while r.exists("cellsignal_detail"):
+        extract = r.rpop("cellsignal_detail")
+        # extract = "https://www.cellsignal.cn/products/elisa-kits/phospho-4e-bp1-thr37-thr46-sandwich-elisa-kit/7216?N=102262+4294956287&Nrpp=200&No=0&fromPage=plp"
         print(extract)
         try:
-            lxml = Abcam().format(extract)
+            lxml = CellSignal().format(extract)
             # print(lxml)
         except Exception:
-            r.lpush("abcam_detail", extract)
+            r.lpush("cellsignal_detail", extract)
             continue
         if lxml is not None:
-            brand = Abcam().brand()
-            kit_type = Abcam().kit_type()
-            catalog_number = Abcam().catalog_number(lxml)
-            product_name = Abcam().product_name(lxml)
-            detail_url = Abcam().detail_url(extract)
-            tests = Abcam().tests(lxml)
-            assay_type = Abcam().assay_type(lxml)
-            detection_method = Abcam().detection_method(lxml)
-            sample_type = Abcam().sample_type(lxml)
-            assay_length = Abcam().assay_length(lxml)
-            sensitivity = Abcam().sensitivity(lxml)
-            assay_range = Abcam().assay_range(lxml)
-            # specificity = Abcam().specificity(lxml)
-            # target_protein = Abcam().target_protein(lxml)
-            geneid = Abcam().geneid(lxml)
-            swissprot = Abcam().swissprot(lxml)
-            datasheet_url = Abcam().datasheet_url(lxml)
-            review = Abcam().review(lxml)
-            image_qty = Abcam().image_qty(lxml)
-            citations = Abcam().citations(lxml)
-            synonyms = Abcam().synonyms(lxml)
-            # note = Abcam().note(lxml)
-            # sub_citations = Abcam().sub_citations(lxml)
-            sub_images = Abcam().sub_images(lxml)
-            # print(sub_images)
+            brand = CellSignal().brand()
+            kit_type = CellSignal().kit_type()
+            catalog_number = CellSignal().catalog_number(lxml)
+            product_name = CellSignal().product_name(lxml)
+            detail_url = CellSignal().detail_url(extract)
+            tests = CellSignal().tests(lxml)
+            # assay_type = CellSignal().assay_type(lxml)
+            # detection_method = CellSignal().detection_method(lxml)
+            # sample_type = CellSignal().sample_type(lxml)
+            # assay_length = CellSignal().assay_length(lxml)
+            # sensitivity = CellSignal().sensitivity(lxml)
+            # assay_range = CellSignal().assay_range(lxml)
+            specificity = CellSignal().specificity(lxml)
+            # target_protein = CellSignal().target_protein(lxml)
+            geneid = CellSignal().geneid(lxml)
+            swissprot = CellSignal().swissprot(lxml)
+            datasheet_url = CellSignal().datasheet_url(lxml)
+            # review = CellSignal().review(lxml)
+            image_qty = CellSignal().image_qty(lxml)
+            citations = CellSignal().citations(lxml)
+            # synonyms = CellSignal().synonyms(lxml)
+            # note = CellSignal().note(lxml)
+            sub_citations = CellSignal().sub_citations(citations, lxml)
+            sub_images = CellSignal().sub_images(image_qty, lxml)
+            sub_price = CellSignal().sub_price(lxml)
+
         else:
-            r.lpush("abcam_detail", extract)
+            r.lpush("cellsignal_detail", extract)
             continue
         new_detail = Detail(
             Brand=brand,
@@ -375,44 +395,40 @@ if __name__ == "__main__":
             Product_Name=product_name,
             Detail_url=detail_url,
             Tests=tests,
-            Assay_type=assay_type,
-            Detection_Method=detection_method,
-            Sample_type=sample_type,
-            Assay_length=assay_length,
-            Sensitivity=sensitivity,
-            Assay_range=assay_range,
-            # Specificity=specificity,
+            # Assay_type=assay_type,
+            # Detection_Method=detection_method,
+            # Sample_type=sample_type,
+            # Assay_length=assay_length,
+            # Sensitivity=sensitivity,
+            # Assay_range=assay_range,
+            Specificity=specificity,
             # target_protein=target_protein,
             GeneId=geneid,
             SwissProt=swissprot,
             DataSheet_URL=datasheet_url,
-            Review=str(review),
+            # Review=str(review),
             Image_qty=image_qty,
-            Citations=str(citations),
-            Synonyms=synonyms,
+            Citations=citations,
+            # Synonyms=synonyms,
             # Note=note,
         )
         session.add(new_detail)
 
-        # if sub_citations:
-        #     objects_sub_citations = []
-        #     for sub in sub_citations:
-        #         sub_pid = sub[0]
-        #         sub_spe = sub[1]
-        #         sub_tit = sub[2]
-        #         sub_sam = sub[3]
-        #         sub_pul = sub[4]
+        if sub_citations:
+            objects_sub_citations = []
+            for sub in sub_citations:
+                sub_pid = sub[0]
+                sub_tit = sub[1]
+                sub_pul = sub[2]
 
-        #         new_citations = Citations(
-        #             Catalog_Number=catalog_number,
-        #             PMID=sub_pid,
-        #             Species=sub_spe,
-        #             Article_title=sub_tit,
-        #             Sample_type=sub_sam,
-        #             Pubmed_url=sub_pul,
-        #         )
-        #         objects_sub_citations.append(new_citations)
-        #     session.bulk_save_objects(objects_sub_citations)
+                new_citations = Citations(
+                    Catalog_Number=catalog_number,
+                    PMID=sub_pid,
+                    Article_title=sub_tit,
+                    Pubmed_url=sub_pul,
+                )
+                objects_sub_citations.append(new_citations)
+            session.bulk_save_objects(objects_sub_citations)
 
         if sub_images:
             objects_sub_images = []
@@ -425,12 +441,25 @@ if __name__ == "__main__":
                 )
                 objects_sub_images.append(new_images)
             session.bulk_save_objects(objects_sub_images)
+
+        if sub_price:
+            objects_sub_price = []
+            for sub in sub_price:
+                sub_c = sub[0]
+                suc_s = sub[1]
+
+                new_price = Price(
+                    Catalog_Number=catalog_number, sub_Catalog_Number=sub_c, Size=suc_s
+                )
+                objects_sub_price.append(new_price)
+            session.bulk_save_objects(objects_sub_price)
+
         try:
             session.commit()
             session.close()
             print("done")
         except Exception as e:
-            r.lpush("abcam_detail", extract)
+            r.lpush("cellsignal_detail", extract)
             session.rollback()
             print(e)
         time.sleep(random.uniform(0.5, 1.0))
