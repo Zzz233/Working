@@ -13,6 +13,7 @@ import redis
 import time
 import random
 
+
 Base = declarative_base()
 
 
@@ -28,6 +29,16 @@ class Price(Base):
     Note = Column(String(500), nullable=True, comment="")
     Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
 
+
+# Mysql
+engine = create_engine(
+    "mysql+pymysql://root:biopicky!2019@127.0.0.1:3306/bio_kit?charset=utf8"
+)
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
+# Redis
+pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
+r = redis.Redis(connection_pool=pool)
 
 headers = {
     "Host": "www.abcam.cn",
@@ -45,8 +56,11 @@ headers = {
     "TE": "Trailers",
 }
 # ! abXXXX --> XXXX
-for i in range(1):
-    url = "https://www.abcam.cn/datasheetproperties/availability?abId=193692"
+while r.exists("abcam_extra"):
+    cata = r.lpop("abcam_extra")
+    last = cata.replace("ab", "")
+    url = f"https://www.abcam.cn/datasheetproperties/availability?abId={last}"
+    print(url)
     results = []
     with requests.Session() as s:
         resp = s.get(url=url, headers=headers)
@@ -56,6 +70,16 @@ for i in range(1):
         for item in json_str["size-information"]["Sizes"]:
             sub_catano = item["SellingSizeCode"]
             size = item["Size"]
-            price = item["Price"]
-            print(catano, sub_catano, size, price)
-            results.append()
+            price = item["Price"].replace("&micro;g", "μg")
+            # print(catano, sub_catano, size, price)
+            new_price = Price(
+                Catalog_Number=catano,
+                sub_Catalog_Number=sub_catano,
+                Size=size,
+                Price=price,
+            )
+            results.append(new_price)
+        session.bulk_save_objects(results)
+        session.commit()
+        session.close()
+        print(cata, "done")

@@ -11,6 +11,8 @@ import redis
 import time
 import random
 
+from sqlalchemy.sql.operators import like_op
+
 Base = declarative_base()
 
 
@@ -29,6 +31,16 @@ class Citations(Base):
     Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
 
 
+# Mysql
+engine = create_engine(
+    "mysql+pymysql://root:biopicky!2019@127.0.0.1:3306/bio_kit?charset=utf8"
+)
+DBSession = sessionmaker(bind=engine)
+session = DBSession()
+# Redis
+pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
+r = redis.Redis(connection_pool=pool)
+
 headers = {
     "Host": "www.abcam.cn",
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0",
@@ -45,16 +57,17 @@ headers = {
     "TE": "Trailers",
 }
 # ! redis catano
-catano = "from redis"
 # https://www.abcam.cn/DatasheetProperties/References?productcode=ab181421
-for i in range(1):
-    url = "https://www.abcam.cn/DatasheetProperties/References?productcode=ab181421"
+while r.exists("abcam_citations_extra"):
+    last = r.lpop("abcam_citations_extra")
+    url = f"https://www.abcam.cn/DatasheetProperties/References?productcode={last}"
+    print(url)
     results = []
     with requests.Session() as s:
         resp = s.get(url=url, headers=headers)
         json_str = resp.json()
         for item in json_str:
-            catanum = catano
+            catanum = last
             pmid = item["PubmedID"]
             species = item["Species"]
             title = item["Title"]
@@ -63,5 +76,18 @@ for i in range(1):
                 + str(item["PubmedID"])
                 + "?dopt=Abstract"
             )
-            print(catanum, pmid, species, title, pm_url)
-            results.append()
+            # print(catanum, pmid, species, title, pm_url)
+            new_citations = Citations(
+                Catalog_Number=catanum,
+                PMID=pmid,
+                Species=species,
+                Article_title=title,
+                Pubmed_url=pm_url,
+            )
+            results.append(new_citations)
+
+        session.bulk_save_objects(results)
+        session.commit()
+        session.close()
+        print("done")
+        time.sleep(1)
