@@ -102,7 +102,7 @@ class Novus(object):
 
     def format(self, url):
         with requests.Session() as s:
-            resp = s.get(url=url, headers=self.headers, timeout=120)
+            resp = s.get(url=url, headers=self.headers, timeout=60)
             html_lxml = etree.HTML(resp.text)
             try:
                 content = html_lxml.xpath('//div[@id="caspertesting"]')[
@@ -227,7 +227,13 @@ class Novus(object):
         return synonyms
 
     def conjugate(self, html):
-        return None
+        try:
+            conjugate = html.xpath(
+                './/tr[@class="lined"]/td/strong[contains(text(), "Conjugate")]/../following-sibling::td[1]/div/text()'
+            )[0].strip()
+        except Exception:
+            conjugate = None
+        return conjugate
 
     def note(self, html):
         return None
@@ -239,18 +245,19 @@ class Novus(object):
         if citations == 0:
             return results
         else:
-            lis = html.xpath(
-                './/div[@id="pdpManualCitations"]/ul/li[@class="OneLinkNoTx"]'
+            trs = html.xpath(
+                './/table[@id="publications_list_table"]/tbody/tr[@class="lined revfil firstten" or @class="lined revfil hidden"]'
             )
-            for li in lis:
-                pm_url = li.xpath("./a/@href")[0].strip()
+            for tr in trs:
+                pm_url = tr.xpath("./td/a/@href")[0].strip()
                 if "www.ncbi.nlm.nih.gov/pubmed/" in pm_url:
                     pmid = pm_url.split("gov/pubmed/")[1].strip()
                 else:
                     pmid = None
-                title_list = li.xpath("./a//text()")
+                species = tr.xpath("./@data-species")[0].strip()
+                title_list = tr.xpath("./td/a//text()")
                 title = "".join(i for i in title_list)
-                results.append([pmid, title, pm_url])
+                results.append([pmid, title, pm_url, species])
         return results
 
     # ======================================================================== #
@@ -260,14 +267,12 @@ class Novus(object):
         if image_qty == 0:
             return results
         else:
-            divs = html.xpath(
-                './/div[@data-app-id][@class][@data-figure-type="image"][@data-product-id]/div[@class="imgWrapper"]'
-            )
-            for div in divs:
-                img_url = div.xpath("./img[@data-lazy]/@data-lazy")[0].strip()
-                img_dec_list = div.xpath("./../p//text()")
-                img_dec = "".join(i for i in img_dec_list)
-                results.append([img_url, img_dec])
+            imgs = html.xpath('.//div[@class="cycle-slideshow slideshows"]//img')
+            for img in imgs:
+                img_url = img.xpath("./@src")[0].strip()
+                # img_dec_list = img.xpath("./../p//text()")
+                # img_dec = "".join(i for i in img_dec_list)
+                results.append([img_url])
         return results
 
     # ======================================================================== #
@@ -275,31 +280,30 @@ class Novus(object):
     def sub_price(self, html):
         results = []
         try:
-            trs = html.xpath(".//tr[@data-skuid]")
+            trs = html.xpath('.//li[@class="add-to-cart"]//tbody/tr[@class="odd"]')
         except Exception:
             return results
         for tr in trs:
-            sub_cata = tr.xpath("./@data-skuid")[0].strip()
-            sub_size_list = tr.xpath('./td[@class="product-size"]//text()')
+            sub_cata = tr.xpath('./td/div[@class="atc_catnum"]/text()')[0].strip()
+            sub_size_list = tr.xpath('./td/div[@class="atc_size"]//text()')
             sub_size = "".join(i for i in sub_size_list).strip()
             results.append([sub_cata, sub_size])
         return results
 
 
 if __name__ == "__main__":
-    for i in range(1):
-        # while r.exists("cellsignal_detail"):
-        # extract = r.rpop("cellsignal_detail")
-        extract = (
-            "https://www.novusbio.com/products/human-il-6-quantikine-elisa-kit_d6050"
-        )
-        catano = "M6000B"
+    # for i in range(1):
+    while r.exists("novus_detail"):
+        single_data = r.rpop("novus_detail")
+        extract = single_data.split(",")[0]
+        catano = single_data.split(",")[1]
+        # extract = "https://www.novusbio.com/products/mouse-il-6-quantikine-elisa-kit-2-plate_m6000b#datasheet"
         print(extract)
         try:
             lxml = Novus().format(extract)
             print(lxml)
         except Exception:
-            # r.lpush("cellsignal_detail", extract)
+            r.lpush("novus_detail", extract)
             continue
         if lxml is not None:
             brand = Novus().brand()
@@ -323,88 +327,89 @@ if __name__ == "__main__":
             image_qty = Novus().image_qty(lxml)
             citations = Novus().citations(lxml)
             synonyms = Novus().synonyms(lxml)
-            print(synonyms)
+            conjugate = Novus().conjugate(lxml)
             # note = Novus().note(lxml)
-            # sub_citations = Novus().sub_citations(citations, lxml)
-            # sub_images = Novus().sub_images(image_qty, lxml)
-            # sub_price = Novus().sub_price(lxml)
+            sub_citations = Novus().sub_citations(citations, lxml)
+            sub_images = Novus().sub_images(image_qty, lxml)
+            sub_price = Novus().sub_price(lxml)
+            print(sub_price)
 
-        # else:
-        #     r.lpush("cellsignal_detail", extract)
-        #     continue
-        # new_detail = Detail(
-        #     Brand=brand,
-        #     Kit_Type=kit_type,
-        #     Catalog_Number=catalog_number,
-        #     Product_Name=product_name,
-        #     Detail_url=detail_url,
-        #     Tests=tests,
-        #     # Assay_type=assay_type,
-        #     # Detection_Method=detection_method,
-        #     # Sample_type=sample_type,
-        #     # Assay_length=assay_length,
-        #     # Sensitivity=sensitivity,
-        #     # Assay_range=assay_range,
-        #     Specificity=specificity,
-        #     # target_protein=target_protein,
-        #     GeneId=geneid,
-        #     SwissProt=swissprot,
-        #     DataSheet_URL=datasheet_url,
-        #     # Review=str(review),
-        #     Image_qty=image_qty,
-        #     Citations=citations,
-        #     # Synonyms=synonyms,
-        #     # Conjugate=conjugate,
-        #     # Note=note,
-        # )
-        # session.add(new_detail)
+        else:
+            r.lpush("novus_detail", extract)
+            continue
+        new_detail = Detail(
+            Brand=brand,
+            Kit_Type=kit_type,
+            Catalog_Number=catalog_number,
+            Product_Name=product_name,
+            Detail_url=detail_url,
+            # Tests=tests,
+            # Assay_type=assay_type,
+            # Detection_Method=detection_method,
+            # Sample_type=sample_type,
+            # Assay_length=assay_length,
+            # Sensitivity=sensitivity,
+            # Assay_range=assay_range,
+            Specificity=specificity,
+            # target_protein=target_protein,
+            # GeneId=geneid,
+            # SwissProt=swissprot,
+            DataSheet_URL=datasheet_url,
+            Review=str(review),
+            Image_qty=image_qty,
+            Citations=citations,
+            Synonyms=synonyms,
+            Conjugate=conjugate,
+            # Note=note,
+        )
+        session.add(new_detail)
 
-        # if sub_citations:
-        #     objects_sub_citations = []
-        #     for sub in sub_citations:
-        #         sub_pid = sub[0]
-        #         sub_tit = sub[1]
-        #         sub_pul = sub[2]
+        if sub_citations:
+            objects_sub_citations = []
+            for sub in sub_citations:
+                sub_pid = sub[0]
+                sub_tit = sub[1]
+                sub_pul = sub[2]
+                sub_species = sub[3]
 
-        #         new_citations = Citations(
-        #             Catalog_Number=catalog_number,
-        #             PMID=sub_pid,
-        #             Article_title=sub_tit,
-        #             Pubmed_url=sub_pul,
-        #         )
-        #         objects_sub_citations.append(new_citations)
-        #     session.bulk_save_objects(objects_sub_citations)
+                new_citations = Citations(
+                    Catalog_Number=catalog_number,
+                    PMID=sub_pid,
+                    Article_title=sub_tit,
+                    Pubmed_url=sub_pul,
+                    Species=sub_species,
+                )
+                objects_sub_citations.append(new_citations)
+            session.bulk_save_objects(objects_sub_citations)
 
-        # if sub_images:
-        #     objects_sub_images = []
-        #     for sub in sub_images:
-        #         img = sub[0]
-        #         dec = sub[1]
+        if sub_images:
+            objects_sub_images = []
+            for sub in sub_images:
+                img = sub[0]
+                # dec = sub[1]
 
-        #         new_images = Images(
-        #             Catalog_Number=catalog_number, Image_url=img, Image_description=dec
-        #         )
-        #         objects_sub_images.append(new_images)
-        #     session.bulk_save_objects(objects_sub_images)
+                new_images = Images(Catalog_Number=catalog_number, Image_url=img)
+                objects_sub_images.append(new_images)
+            session.bulk_save_objects(objects_sub_images)
 
-        # if sub_price:
-        #     objects_sub_price = []
-        #     for sub in sub_price:
-        #         sub_c = sub[0]
-        #         suc_s = sub[1]
+        if sub_price:
+            objects_sub_price = []
+            for sub in sub_price:
+                sub_c = sub[0]
+                suc_s = sub[1]
 
-        #         new_price = Price(
-        #             Catalog_Number=catalog_number, sub_Catalog_Number=sub_c, Size=suc_s
-        #         )
-        #         objects_sub_price.append(new_price)
-        #     session.bulk_save_objects(objects_sub_price)
+                new_price = Price(
+                    Catalog_Number=catalog_number, sub_Catalog_Number=sub_c, Size=suc_s
+                )
+                objects_sub_price.append(new_price)
+            session.bulk_save_objects(objects_sub_price)
 
-        # try:
-        #     session.commit()
-        #     session.close()
-        #     print("done")
-        # except Exception as e:
-        #     r.lpush("cellsignal_detail", extract)
-        #     session.rollback()
-        #     print(e)
-        # time.sleep(random.uniform(0.5, 1.0))
+        try:
+            session.commit()
+            session.close()
+            print("done")
+        except Exception as e:
+            r.lpush("novus_detail", extract)
+            session.rollback()
+            print(e)
+        time.sleep(random.uniform(0.5, 1.0))
