@@ -1,3 +1,9 @@
+"""
+Suitable Sample    sample type
+Label conjugated 
+
+Calibration Range    assay range
+"""
 import requests
 from lxml import etree
 from sqlalchemy.ext.declarative import declarative_base
@@ -13,7 +19,7 @@ Base = declarative_base()
 
 
 class Detail(Base):
-    __tablename__ = "novus_kit_detail"
+    __tablename__ = "abnova_kit_detail"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -44,7 +50,7 @@ class Detail(Base):
 
 
 class Citations(Base):
-    __tablename__ = "novus_kit_citations"
+    __tablename__ = "abnova_kit_citations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -59,7 +65,7 @@ class Citations(Base):
 
 
 class Images(Base):
-    __tablename__ = "novus_kit_images"
+    __tablename__ = "abnova_kit_images"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -71,7 +77,7 @@ class Images(Base):
 
 
 class Price(Base):
-    __tablename__ = "novus_kit_price"
+    __tablename__ = "abnova_kit_price"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -105,7 +111,7 @@ class Novus(object):
             resp = s.get(url=url, headers=self.headers, timeout=60)
             html_lxml = etree.HTML(resp.text)
             try:
-                content = html_lxml.xpath('//div[@id="caspertesting"]')[
+                content = html_lxml.xpath('//div[@id="divcontent"]')[
                     0
                 ]  # ! <xpath lxml>  None
             except Exception:
@@ -113,18 +119,18 @@ class Novus(object):
         return content
 
     def brand(self):
-        return "novusbio"
+        return "ABnova"
 
     def kit_type(self):
         return "elisa kit"
 
-    def catalog_number(self, catnum):
-        # from redis
+    def catalog_number(self, html):
+        catnum = html.xpath('.//meta[@itemprop="sku"]/@content')[0].strip()
         return catnum
 
     def product_name(self, html):
         try:
-            name_list = html.xpath(".//h1//text()")
+            name_list = html.xpath('.//h1[@itemprop="name"]//text()')
             name = "".join(i for i in name_list).strip()
         except Exception:
             name = None
@@ -140,10 +146,23 @@ class Novus(object):
         return None
 
     def detection_method(self, html):
-        return None
+        try:
+            detection_method = html.xpath(
+                './/b[contains(text(), "Detection Method:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return detection_method
 
     def sample_type(self, html):
-        return None
+        # Suitable Sample:
+        try:
+            sample_type = html.xpath(
+                './/b[contains(text(), "Suitable Sample:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return sample_type
 
     def assay_length(self, html):
         return None
@@ -152,35 +171,65 @@ class Novus(object):
         return None
 
     def assay_range(self, html):
-        return None
+        # Calibration Range:
+        try:
+            assay_range = html.xpath(
+                './/b[contains(text(), "Calibration Range:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
+            )[0].strip()
+        except Exception:
+            return None
+        return assay_range
 
     def specificity(self, html):
         try:
-            specificity_list = html.xpath(
-                './/tr[@class="lined"]/td/strong[contains(text(), "Specificity")]/../following-sibling::td[1]/div//text()'
-            )
-            specificity = "".join(i for i in specificity_list).strip()
+            specificity = html.xpath(
+                './/b[contains(text(), "Product Description:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
+            )[0].strip()
         except Exception:
-            specificity = None
+            return None
         return specificity
 
     def target_protein(self):
         return None
 
     def geneid(self, html):
-        return None
+        try:
+            geneid = html.xpath(
+                './/div[@id="gene_info"]/div[@class="part"]/ul[@class="first_title"]/a[@name]/@id'
+            )[0].strip()
+        except Exception:
+            return None
+        return geneid
 
     def swissprot(self, html):
         return None
 
     def datasheet_url(self, html):
+        results = []
         try:
-            datasheet_url = html.xpath('.//a[@class="datasheet-download"]/@href')[
-                0
-            ].strip()
+            datasheet_url = (
+                "http://www.abnova.com"
+                + html.xpath(
+                    './/b[contains(text(),"Datasheet:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/a[@download]/@href'
+                )[0].strip()
+            )
+            results.append(datasheet_url)
         except Exception:
-            datasheet_url = None
-        return datasheet_url
+            pass
+        try:
+            protocol_url = (
+                "http://www.abnova.com"
+                + html.xpath(
+                    './/b[contains(text(),"Protocol:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/a[@download]/@href'
+                )[0].strip()
+            )
+            results.append(protocol_url)
+        except Exception:
+            pass
+        ds_pt = ",".join(results)
+        if len(ds_pt) == 0:
+            ds_pt = None
+        return ds_pt
 
     def review(self, html):
         try:
@@ -199,7 +248,9 @@ class Novus(object):
     def image_qty(self, html):
         try:
             image_qty = len(
-                html.xpath('.//div[@class="cycle-slideshow slideshows"]//img')
+                html.xpath(
+                    './/b[contains(text(), "Quality Control Testing:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/img'
+                )
             )
         except Exception:
             image_qty = 0
@@ -218,10 +269,9 @@ class Novus(object):
 
     def synonyms(self, html):
         try:
-            synonyms_list = html.xpath(
-                './/h2[@class="greyHead2"][contains(text(), "Alternate Names for ")]/following-sibling::div[1][@class="ds_info"]/div[@class="information-list"]/ul/li/text()'
-            )
-            synonyms = ",".join(i for i in synonyms_list)
+            synonyms = html.xpath(
+                './/b[contains(text(), "Gene Alias:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
+            )[0].strip()
         except Exception:
             synonyms = None
         return synonyms
@@ -229,7 +279,7 @@ class Novus(object):
     def conjugate(self, html):
         try:
             conjugate = html.xpath(
-                './/tr[@class="lined"]/td/strong[contains(text(), "Conjugate")]/../following-sibling::td[1]/div/text()'
+                './/b[contains(text(), "Label:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/text()'
             )[0].strip()
         except Exception:
             conjugate = None
@@ -267,12 +317,14 @@ class Novus(object):
         if image_qty == 0:
             return results
         else:
-            imgs = html.xpath('.//div[@class="cycle-slideshow slideshows"]//img')
+            imgs = html.xpath(
+                './/b[contains(text(), "Quality Control Testing:")]/../following-sibling::li[@class="black11_a_underline sub_content"]/img'
+            )
             for img in imgs:
-                img_url = img.xpath("./@src")[0].strip()
+                img_url = "http://www.abnova.com" + img.xpath("./@src")[0].strip()
                 # img_dec_list = img.xpath("./../p//text()")
-                # img_dec = "".join(i for i in img_dec_list)
-                results.append([img_url])
+                img_des = img.xpath("./@alt")[0].strip()
+                results.append([img_url, img_des])
         return results
 
     # ======================================================================== #
@@ -293,49 +345,50 @@ class Novus(object):
 
 if __name__ == "__main__":
     # for i in range(1):
-    while r.exists("novus_detail"):
-        single_data = r.rpop("novus_detail")
-        extract = single_data.split(",")[0]
-        catano = single_data.split(",")[1]
-        # extract = "https://www.novusbio.com/products/mouse-il-6-quantikine-elisa-kit-2-plate_m6000b#datasheet"
-        print(single_data)
+    while r.exists("abnova_detail"):
+        # single_data = r.rpop("novus_detail")
+        # extract = single_data.split(",")[0]
+        # catano = single_data.split(",")[1]
+        extract = r.rpop("abnova_detail")
+        # extract = "http://www.abnova.com/products/products_detail.asp?catalog_id=KA5335"
+        print(extract)
         try:
             lxml = Novus().format(extract)
-            print(lxml)
+            # print(lxml)
         except Exception:
-            r.lpush("novus_detail", extract)
+            # r.lpush("novus_detail", extract)
             continue
         if lxml is not None:
             brand = Novus().brand()
             kit_type = Novus().kit_type()
-            catalog_number = Novus().catalog_number(catano)
+            catalog_number = Novus().catalog_number(lxml)
             product_name = Novus().product_name(lxml)
             detail_url = Novus().detail_url(extract)
             # tests = Novus().tests(lxml)
             # assay_type = Novus().assay_type(lxml)
-            # detection_method = Novus().detection_method(lxml)
-            # sample_type = Novus().sample_type(lxml)
+            detection_method = Novus().detection_method(lxml)
+            sample_type = Novus().sample_type(lxml)
             # assay_length = Novus().assay_length(lxml)
             # sensitivity = Novus().sensitivity(lxml)
-            # assay_range = Novus().assay_range(lxml)
+            assay_range = Novus().assay_range(lxml)
             specificity = Novus().specificity(lxml)
             # target_protein = Novus().target_protein(lxml)
-            # geneid = Novus().geneid(lxml)
+            geneid = Novus().geneid(lxml)
             # swissprot = Novus().swissprot(lxml)
             datasheet_url = Novus().datasheet_url(lxml)
-            review = Novus().review(lxml)
+            # review = Novus().review(lxml)
             image_qty = Novus().image_qty(lxml)
-            citations = Novus().citations(lxml)
+            # citations = Novus().citations(lxml)
             synonyms = Novus().synonyms(lxml)
             conjugate = Novus().conjugate(lxml)
             # note = Novus().note(lxml)
-            sub_citations = Novus().sub_citations(citations, lxml)
+            # sub_citations = Novus().sub_citations(citations, lxml)
             sub_images = Novus().sub_images(image_qty, lxml)
-            sub_price = Novus().sub_price(lxml)
-            print(sub_price)
+            # print(sub_images)
+            # sub_price = Novus().sub_price(lxml)
 
         else:
-            r.lpush("novus_detail", extract)
+            r.lpush("abnova_detail", extract)
             continue
         new_detail = Detail(
             Brand=brand,
@@ -345,71 +398,73 @@ if __name__ == "__main__":
             Detail_url=detail_url,
             # Tests=tests,
             # Assay_type=assay_type,
-            # Detection_Method=detection_method,
-            # Sample_type=sample_type,
+            Detection_Method=detection_method,
+            Sample_type=sample_type,
             # Assay_length=assay_length,
             # Sensitivity=sensitivity,
-            # Assay_range=assay_range,
+            Assay_range=assay_range,
             Specificity=specificity,
             # target_protein=target_protein,
-            # GeneId=geneid,
+            GeneId=geneid,
             # SwissProt=swissprot,
             DataSheet_URL=datasheet_url,
-            Review=str(review),
+            # Review=str(review),
             Image_qty=image_qty,
-            Citations=citations,
+            # Citations=citations,
             Synonyms=synonyms,
             Conjugate=conjugate,
             # Note=note,
         )
         session.add(new_detail)
 
-        if sub_citations:
-            objects_sub_citations = []
-            for sub in sub_citations:
-                sub_pid = sub[0]
-                sub_tit = sub[1]
-                sub_pul = sub[2]
-                sub_species = sub[3]
+        # if sub_citations:
+        #     objects_sub_citations = []
+        #     for sub in sub_citations:
+        #         sub_pid = sub[0]
+        #         sub_tit = sub[1]
+        #         sub_pul = sub[2]
+        #         sub_species = sub[3]
 
-                new_citations = Citations(
-                    Catalog_Number=catalog_number,
-                    PMID=sub_pid,
-                    Article_title=sub_tit,
-                    Pubmed_url=sub_pul,
-                    Species=sub_species,
-                )
-                objects_sub_citations.append(new_citations)
-            session.bulk_save_objects(objects_sub_citations)
+        #         new_citations = Citations(
+        #             Catalog_Number=catalog_number,
+        #             PMID=sub_pid,
+        #             Article_title=sub_tit,
+        #             Pubmed_url=sub_pul,
+        #             Species=sub_species,
+        #         )
+        #         objects_sub_citations.append(new_citations)
+        #     session.bulk_save_objects(objects_sub_citations)
 
         if sub_images:
             objects_sub_images = []
             for sub in sub_images:
                 img = sub[0]
-                # dec = sub[1]
+                des = sub[1]
 
-                new_images = Images(Catalog_Number=catalog_number, Image_url=img)
+                new_images = Images(
+                    Catalog_Number=catalog_number, Image_url=img, Image_description=des
+                )
                 objects_sub_images.append(new_images)
             session.bulk_save_objects(objects_sub_images)
 
-        if sub_price:
-            objects_sub_price = []
-            for sub in sub_price:
-                sub_c = sub[0]
-                suc_s = sub[1]
+        # if sub_price:
+        #     objects_sub_price = []
+        #     for sub in sub_price:
+        #         sub_c = sub[0]
+        #         suc_s = sub[1]
 
-                new_price = Price(
-                    Catalog_Number=catalog_number, sub_Catalog_Number=sub_c, Size=suc_s
-                )
-                objects_sub_price.append(new_price)
-            session.bulk_save_objects(objects_sub_price)
+        #         new_price = Price(
+        #             Catalog_Number=catalog_number, sub_Catalog_Number=sub_c, Size=suc_s
+        #         )
+        #         objects_sub_price.append(new_price)
+        #     session.bulk_save_objects(objects_sub_price)
 
         try:
             session.commit()
             session.close()
             print("done")
         except Exception as e:
-            r.lpush("novus_detail", extract)
+            r.lpush("abnova_detail", extract)
             session.rollback()
             print(e)
         time.sleep(random.uniform(0.5, 1.0))
