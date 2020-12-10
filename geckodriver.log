@@ -1,0 +1,61 @@
+1607570678944	geckodriver	INFO	Listening on 127.0.0.1:59015
+1607570681967	mozrunner::runner	INFO	Running command: "D:\\Dev\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" "--marionette" "-foreground" "-no-remote" "-profile" "C:\\Users\\NINGME~1\\AppData\\Local\\Temp\\rust_mozprofilebowDMm"
+Can't find symbol 'eglSwapBuffersWithDamageEXT'.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1607570683995	Marionette	INFO	Listening on port 59039
+1607570684093	Marionette	WARN	TLS certificate errors will be ignored for this session
+console.error: Region.jsm: "Error fetching region" (new AbortError("The operation was aborted. ", (void 0), 697))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 351))
+1607570720540	Marionette	INFO	Stopped listening on port 59039
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
+
+1607570742246	geckodriver	INFO	Listening on 127.0.0.1:59281
+1607570745274	mozrunner::runner	INFO	Running command: "D:\\Dev\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" "--marionette" "-foreground" "-no-remote" "-profile" "C:\\Users\\NINGME~1\\AppData\\Local\\Temp\\rust_mozprofileSJrYR1"
+Can't find symbol 'eglSwapBuffersWithDamageEXT'.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1607570747202	Marionette	INFO	Listening on port 59293
+1607570747303	Marionette	WARN	TLS certificate errors will be ignored for this session
+console.error: Region.jsm: "Error fetching region" (new AbortError("The operation was aborted. ", (void 0), 697))
+console.error: Region.jsm: "Failed to fetch region" (new Error("NO_RESULT", "resource://gre/modules/Region.jsm", 351))
+1607570776144	Marionette	INFO	Stopped listening on port 59293
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
+
+1607570786310	geckodriver	INFO	Listening on 127.0.0.1:59442
+1607570789388	mozrunner::runner	INFO	Running command: "D:\\Dev\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" "--marionette" "-foreground" "-no-remote" "-profile" "C:\\Users\\NINGME~1\\AppData\\Local\\Temp\\rust_mozprofileDdlx8m"
+Can't find symbol 'eglSwapBuffersWithDamageEXT'.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1607570791233	Marionette	INFO	Listening on port 59452
+1607570791415	Marionette	WARN	TLS certificate errors will be ignored for this session
+1607570797811	Marionette	INFO	Stopped listening on port 59452
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
+
+1607570916386	geckodriver	INFO	Listening on 127.0.0.1:59826
+1607570919430	mozrunner::runner	INFO	Running command: "D:\\Dev\\Program Files (x86)\\Mozilla Firefox\\firefox.exe" "--marionette" "-foreground" "-no-remote" "-profile" "C:\\Users\\NINGME~1\\AppData\\Local\\Temp\\rust_mozprofile998lcb"
+Can't find symbol 'eglSwapBuffersWithDamageEXT'.
+JavaScript error: resource://gre/modules/XULStore.jsm, line 66: Error: Can't find profile directory.
+console.warn: SearchSettings: "get: No settings file exists, new profile?" (new Error("", "(unknown module)"))
+1607570921321	Marionette	INFO	Listening on port 59846
+1607570921459	Marionette	WARN	TLS certificate errors will be ignored for this session
+console.warn: services.settings: main/whats-new-panel sync interrupted by shutdown
+1607570924738	Marionette	INFO	Stopped listening on port 59846
+
+###!!! [Child][RunMessage] Error: Channel closing: too late to send/recv, messages will be lost
+
+
+###!!! [Child][MessageChannel::SendAndWait] Error: Channel error: cannot send/recv
+
