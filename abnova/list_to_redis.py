@@ -61,13 +61,13 @@ session = DBSession()
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
 r = redis.Redis(connection_pool=pool)
 
-task_list = session.query(Data.Catalog_Number).all()
+task_list = session.query(Data.Detail_url).all()
 # task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
 for i in task_list:
-    item = i[0]
+    item1 = i[0]
     # item2 = i[1]
     # item = item1 + "," + item2
-    r.rpush("abnova_price", item)
-    print(item)
+    r.rpush("abnova_detail", item1)
+    print(item1)
 
 pool.disconnect()
