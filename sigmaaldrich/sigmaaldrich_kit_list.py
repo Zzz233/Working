@@ -13,7 +13,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "origene_kit_list"
+    __tablename__ = "sigmaaldrich_kit_list"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -50,11 +50,40 @@ headers = {
 }
 brand = "sigmaaldrich"
 
-for i in range(1):
-    url = "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=111681178"
-    with requests.Session() as s:
-        resp = s.get(url=url, headers=headers)
-        lxml = etree.HTML(resp.text)
-        td = lxml.xpath('//tbody[@id="111681178PrdTblBdy"]')
+urls = [
+    "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=13831609",
+    "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=111681177",
+    "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=111681176",
+    "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=111681178",
+]
 
-        print(td)
+for i in urls:
+    # url = "https://www.sigmaaldrich.com/life-science/cell-biology/antibodies/antibody-products.html?TablePage=111681176"
+    with requests.Session() as s:
+        resp = s.get(url=i, headers=headers, timeout=60)
+        lxml = etree.HTML(resp.text)
+        trs = lxml.xpath(".//tbody[@id]/tr[not(@class)]")
+
+        print(trs)
+        for tr in trs:
+            catnum = tr.xpath("./td[@abbr]/@abbr")[0].strip()
+            link = (
+                "https://www.sigmaaldrich.com"
+                + tr.xpath("./td[@abbr]/a/@href")[0].strip()
+            )
+            name_text = tr.xpath('./td[@class][@align="LEFT"]/a/text()')
+            name = "".join(i for i in name_text)
+            print(catnum, name, link)
+            new_data = Data(
+                Brand=brand, Catalog_Number=catnum, Product_Name=name, Detail_url=link
+            )
+            session.add(new_data)
+            try:
+                session.commit()
+                session.close()
+            except Exception as e:
+                session.rollback()
+                print(e)
+                pass
+    print(i, "done")
+    time.sleep(random.uniform(2.0, 3.0))

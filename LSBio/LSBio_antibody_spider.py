@@ -9,7 +9,8 @@ import time
 import random
 import redis
 
-pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=1)
+pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True,
+                            db=1)
 r = redis.Redis(connection_pool=pool)
 Base = declarative_base()
 
@@ -53,7 +54,8 @@ class Detail(Base):
     Image_qty = Column(Integer, nullable=True, comment="")
     Image_url = Column(String(500), nullable=True, comment="")
     Note = Column(String(500), nullable=True, comment="")
-    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
+    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True,
+                        comment="")
 
 
 class Application(Base):
@@ -64,7 +66,8 @@ class Application(Base):
     Application = Column(String(1000), nullable=True, comment="")
     Dilution = Column(String(2000), nullable=True, comment="")
     Note = Column(String(500), nullable=True, comment="")
-    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
+    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True,
+                        comment="")
 
 
 class Citations(Base):
@@ -78,7 +81,8 @@ class Citations(Base):
     Article_title = Column(String(1000), nullable=True, comment="")
     Pubmed_url = Column(String(1000), nullable=True, comment="")
     Note = Column(String(500), nullable=True, comment="")
-    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
+    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True,
+                        comment="")
 
 
 class Price(Base):
@@ -91,7 +95,8 @@ class Price(Base):
     Price = Column(String(50), nullable=True, comment="")
     Antibody_Status = Column(String(20), nullable=True, comment="")
     Note = Column(String(500), nullable=True, comment="")
-    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
+    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True,
+                        comment="")
 
 
 class Images(Base):
@@ -102,7 +107,8 @@ class Images(Base):
     Image_url = Column(String(500), nullable=True, comment="")
     Image_description = Column(String(1000), nullable=True, comment="")
     Note = Column(String(500), nullable=True, comment="")
-    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True, comment="")
+    Crawl_Date = Column(DateTime, server_default=func.now(), nullable=True,
+                        comment="")
 
 
 engine = create_engine(
@@ -115,11 +121,11 @@ session = DBSession()
 class LSbio:
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Geck"
-        "o/20100101 Firefox/82.0",
+                      "o/20100101 Firefox/82.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,ima"
-        "ge/webp,*/*;q=0.8",
+                  "ge/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;"
-        "q=0.3,en;q=0.2",
+                           "q=0.3,en;q=0.2",
         "Accept-Encoding": "gzip, deflate, br",
         "Connection": "keep-alive",
         # 'Cookie': 'LifespanSessionId=kaw1deoamlwa5ycgndt4alya; _'\
@@ -167,9 +173,9 @@ class LSbio:
 
     def antibody_type(self, html):
         if html.xpath(
-            './/div[@class="LabelText c-AntibodyS'
-            'pecifications__LabelText"][contains('
-            'text(), "Clonality")]'
+                './/div[@class="LabelText c-AntibodyS'
+                'pecifications__LabelText"][contains('
+                'text(), "Clonality")]'
         ):
             antibody_type = html.xpath(
                 './/div[@class="LabelText c-AntibodyS'
@@ -190,7 +196,8 @@ class LSbio:
         return sellable
 
     def synonyms(self, html):
-        if html.xpath('.//div[@class="SubLabelText"][contains(' 'text(), "Synonyms")]'):
+        if html.xpath(
+                './/div[@class="SubLabelText"][contains(' 'text(), "Synonyms")]'):
             synonyms = (
                 html.xpath(
                     './/div[@class="SubLabelText"][contains('
@@ -199,8 +206,8 @@ class LSbio:
                     'div[@class="DataText"]/text()'
                     ""
                 )[0]
-                .strip()
-                .replace(" | ", ",")
+                    .strip()
+                    .replace(" | ", ",")
             )
         else:
             synonyms = None
@@ -208,8 +215,8 @@ class LSbio:
 
     def application(self, html):
         if html.xpath(
-            './/div[@class="c-AntibodyOverview__Labe'
-            'lText"][contains(text(), "Application:")]'
+                './/div[@class="c-AntibodyOverview__Labe'
+                'lText"][contains(text(), "Application:")]'
         ):
             application = html.xpath(
                 './/div[@class="c-AntibodyOverview__Labe'
@@ -231,14 +238,14 @@ class LSbio:
                         '"]//text()'
                     )
                 )
-                .replace("\\n", "")
-                .replace("\\r", "")
-                .replace("', '", "")
-                .replace("['", "")
-                .replace("']", "")
-                .replace("                            \\xa0", "")
-                .strip()
-                .split("(This antibody is")[0]
+                    .replace("\\n", "")
+                    .replace("\\r", "")
+                    .replace("', '", "")
+                    .replace("['", "")
+                    .replace("']", "")
+                    .replace("                            \\xa0", "")
+                    .strip()
+                    .split("(This antibody is")[0]
             )
         else:
             conjugated = None
@@ -254,8 +261,8 @@ class LSbio:
 
     def modified(self, html):
         if html.xpath(
-            './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
-            'xt"][contains(text(), "Modifications")]'
+                './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
+                'xt"][contains(text(), "Modifications")]'
         ):
             modified = html.xpath(
                 './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
@@ -268,8 +275,8 @@ class LSbio:
 
     def host_species(self, html):
         if html.xpath(
-            './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
-            'xt"][contains(text(), "Host")]'
+                './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
+                'xt"][contains(text(), "Host")]'
         ):
             host_species = html.xpath(
                 './/div[@class="LabelText c-AntibodySpecifications__LabelTe'
@@ -304,8 +311,8 @@ class LSbio:
 
     def species_reactivity(self, html):
         if html.xpath(
-            './/div[@class="c-AntibodyOverview__LabelText"][contains(te'
-            'xt(), "Reactivity:")]'
+                './/div[@class="c-AntibodyOverview__LabelText"][contains(te'
+                'xt(), "Reactivity:")]'
         ):
             species_reactivity = html.xpath(
                 './/div[@class="c-AntibodyOverview__LabelText"][contains(te'
@@ -327,8 +334,8 @@ class LSbio:
 
     def immunogen(self, html):
         if html.xpath(
-            './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
-            '[contains(text(), "Immunogen")]'
+                './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
+                '[contains(text(), "Immunogen")]'
         ):
             immunogen = html.xpath(
                 './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
@@ -350,8 +357,8 @@ class LSbio:
 
     def purify(self, html):
         if html.xpath(
-            './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
-            '[contains(text(), "Purification")]'
+                './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
+                '[contains(text(), "Purification")]'
         ):
             purify = html.xpath(
                 './/div[@class="LabelText c-AntibodySpecifications__LabelText"]'
@@ -364,8 +371,8 @@ class LSbio:
 
     def citations(self, html):
         if html.xpath(
-            './/h2[@class="c-DetailPage__MainContentSectionHeaderText"]'
-            '[contains(text(), "Publications (")]'
+                './/h2[@class="c-DetailPage__MainContentSectionHeaderText"]'
+                '[contains(text(), "Publications (")]'
         ):
             citations = html.xpath(
                 './/h2[@class="c-DetailPage__MainContentSectionHeaderText"]'
@@ -413,7 +420,8 @@ class LSbio:
     def sub_application(self, html):
         result = []
         if html.xpath('.//ul[@class="l-AntibodySpecifications__AssayList"]'):
-            ul = html.xpath('.//ul[@class="l-AntibodySpecifications__AssayList"]')[0]
+            ul = \
+            html.xpath('.//ul[@class="l-AntibodySpecifications__AssayList"]')[0]
         else:
             return result
         result = []
@@ -441,10 +449,12 @@ class LSbio:
             article_title = item.xpath(
                 './/div[@class="l-Publi' 'cation__Text"]/text()'
             )[0].strip()
-            pmid = item.xpath(".//a[contains(text()" ', "PubMed:")]/text()')[0].split(
+            pmid = \
+            item.xpath(".//a[contains(text()" ', "PubMed:")]/text()')[0].split(
                 ": "
             )[1]
-            pubmed_url = item.xpath(".//a[contains(text()," ' "PubMed:")]/@href')[0]
+            pubmed_url = \
+            item.xpath(".//a[contains(text()," ' "PubMed:")]/@href')[0]
             result.append([article_title, pmid, pubmed_url])
         return result
 
@@ -628,6 +638,7 @@ def main():
             session.close()
             print("done")
         except Exception as e:
+            r.lpush("lsbio_detail", extract)
             session.rollback()
             print(e)
         time.sleep(random.uniform(1, 2.5))
