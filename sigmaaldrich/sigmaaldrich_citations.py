@@ -66,23 +66,23 @@ while r.exists("sigmaaldrich_citations"):
     except Exception:
         item = catano + "," + "0"
         r.rpush("sigmaaldrich_citation_qty", item)
-        print("done")
+        print("0插入")
         time.sleep(random.uniform(1.0, 1.5))
         continue
 
     item = catano + "," + str(citations)
     r.rpush("sigmaaldrich_citation_qty", item)
-    print("插入")
+    print("N插入")
     print(citations)
-    for item in json_data["content"]:
-        title = item["text"].strip()
+    # for item in json_data["content"]:
+    #     title = item["text"].strip()
 
-        new_citations = Citations(
-            Catalog_Number=catano,
-            Article_title=title,
-        )
-        session.add(new_citations)
-        session.commit()
-        session.close()
-        print("done")
-    time.sleep(random.uniform(1.0, 1.5))
+    #     new_citations = Citations(
+    #         Catalog_Number=catano,
+    #         Article_title=title,
+    #     )
+    #     session.add(new_citations)
+    #     session.commit()
+    #     session.close()
+    #     print("done")
+    # time.sleep(random.uniform(1.0, 1.5))
