@@ -66,3 +66,4 @@ for i in range(1):
         session.add(new_price)
         session.commit()
         session.close()
+    time.sleep(random.uniform(1.0, 1.5))
