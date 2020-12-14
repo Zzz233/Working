@@ -54,12 +54,11 @@ r = redis.Redis(connection_pool=pool)
 
 while r.exists("sigmaaldrich_citation_qty"):
     r_data = r.lpop("sigmaaldrich_citation_qty")
-    r.rpush("sigmaaldrich_citation_qty", r_data)
     print(r_data)
     catnum = r_data.split(",")[0]
     citation_qty = int(r_data.split(",")[1])
     session.query(Detail).filter(Detail.Catalog_Number == catnum).update(
-        {"Citations": ""}
+        {"Citations": citation_qty}
     )
     try:
         session.commit()
