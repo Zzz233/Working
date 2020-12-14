@@ -60,9 +60,18 @@ while r.exists("sigmaaldrich_citations"):
     url = f"https://www.sigmaaldrich.com/catalog/documents?term={catano_lower}sigma&itemsperpage=10&pageNo=1&locale=zh_CN&t=0.2958547314451786"
     resp = requests.post(url=url, headers=headers)
     json_data = resp.json()
-    citations = json_data["count"]
+
+    try:
+        citations = json_data["count"]
+    except Exception:
+        item = catano + "," + "0"
+        r.rpush("sigmaaldrich_citation_qty", item)
+        print("done")
+        time.sleep(random.uniform(1.0, 1.5))
+        continue
+
     item = catano + "," + str(citations)
-    r.push("sigmaaldrich_citations", item)
+    r.rpush("sigmaaldrich_citation_qty", item)
     print("插入")
     print(citations)
     for item in json_data["content"]:
