@@ -17,9 +17,9 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "projectgrant"
-
-    Id = Column(Integer, primary_key=True, comment="项目批准号")
+    __tablename__ = "projectgrants"
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
+    ProjectCode = Column(String(20), nullable=True, comment="项目批准号")
     ProjectName = Column(String(200), nullable=True, comment="")
     ProjectType = Column(String(50), nullable=True, comment="")
     Institution = Column(String(100), nullable=False, comment="")
@@ -59,7 +59,7 @@ UA = {
 
 
 def crawler(page, headers):
-    url = f"http://fund.keyanzhiku.com/Index/index/xk_name/%E4%B8%8D%E9%99%90/xkid/0/start_year/0/end_year/0/xmid/0/search/1/p/{page}.html"
+    url = f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/p/{page}.html"
     results = []
     with requests.Session() as s:
         resp = s.get(url=url, headers=headers)
@@ -82,7 +82,7 @@ def crawler(page, headers):
                     .strip()
                 )
             except Exception:
-                leader = None
+                leader = "0"
             # 申请单位
             try:
                 organization = (
@@ -91,7 +91,7 @@ def crawler(page, headers):
                     .strip()
                 )
             except Exception:
-                organization = None
+                organization = "0"
             # 研究类型
             try:
                 research_type = (
@@ -100,7 +100,7 @@ def crawler(page, headers):
                     .strip()
                 )
             except Exception:
-                research_type = None
+                research_type = "0"
             # 项目批准号
             try:
                 approve_num = (
@@ -109,7 +109,7 @@ def crawler(page, headers):
                     .strip()
                 )
             except Exception:
-                approve_num = None
+                approve_num = "0"
             # 批准年度：
             try:
                 year_text = (
@@ -119,7 +119,8 @@ def crawler(page, headers):
                 )
                 year = datetime.datetime.strptime(year_text, "%Y").date()
             except Exception:
-                year = None
+                year_error = "1949"
+                year = datetime.datetime.strptime(year_error, "%Y").date()
             # 金额
             try:
                 cash = (
@@ -129,7 +130,7 @@ def crawler(page, headers):
                     .replace("万", "")
                 )
             except Exception:
-                cash = None
+                cash = "0"
             # 关键字
             try:
                 key_word = (
@@ -138,7 +139,7 @@ def crawler(page, headers):
                     .strip()
                 )
             except Exception:
-                key_word = None
+                key_word = "0"
             results.append(
                 [
                     detail_link,
@@ -159,6 +160,8 @@ if __name__ == "__main__":
     # for page_no in range(1):
     while r.exists("keyanzhiku_pagenum"):
         page_no = r.lpop("keyanzhiku_pagenum")
+        print(page_no)
+        final_data = []
         for item in crawler(page_no, UA):
             l_url = item[0]
             l_title = item[1]
@@ -170,7 +173,7 @@ if __name__ == "__main__":
             l_cash = item[7]
             l_key_word = item[8]
             new_data = Data(
-                Id=l_approve_num,
+                ProjectCode=l_approve_num,
                 ProjectName=l_title,
                 ProjectType=l_research_type,
                 Institution=l_organization,
@@ -183,13 +186,14 @@ if __name__ == "__main__":
                 Classification="0",
                 Status="0",
             )
-            session.add(new_data)
-            try:
-                session.commit()
-                session.close()
-                print("done")
-            except Exception as e:
-                session.rollback()
-                r.rpush("keyanzhiku_pagenum", page_no)
-                print(e)
-        time.sleep(random.uniform(0.5, 1.0))
+            final_data.append(new_data)
+        session.bulk_save_objects(final_data)
+        try:
+            session.commit()
+            session.close()
+            print("done")
+        except Exception as e:
+            session.rollback()
+            r.rpush("keyanzhiku_pagenum", page_no)
+            print(e)
+        time.sleep(random.uniform(1, 1.5))
