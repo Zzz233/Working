@@ -40,8 +40,11 @@ headers = {
     "user-agent": "Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36",
 }
 
-for i in range(1):
-    url = "https://www.thermofisher.com/elisa/product/VEGF-A-Human-ELISA-Kit/BMS277-2"
+# for i in range(1):
+while r.exists("invitrogen_image"):
+    catanum = r.lpop("invitrogen_image")
+    url = f"https://www.thermofisher.com/order/genome-database/antibody-figures?prodType=IMMA&assayId={catanum}"
+    print(catanum)
     with requests.Session() as s:
         resp = s.get(url=url)
         text = resp.text
@@ -51,4 +54,13 @@ for i in range(1):
             img_des = json_data[0]["links"][0]["description"]
             print(img_url, img_des)
         except Exception:
-            pass
+            print("没图")
+            continue
+        new_images = Images(
+            Catalog_Number=catanum, Image_url=img_url, Image_description=img_des
+        )
+        session.add(new_images)
+        session.commit()
+        session.close()
+        print("done")
+        time.sleep(random.uniform(1.0, 1.5))
