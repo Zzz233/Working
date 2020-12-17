@@ -205,3 +205,5 @@ if __name__ == "__main__":
             r.rpush("keyanzhiku_pagenum", page_no)
             print(e)
         time.sleep(random.uniform(1.5, 1.5))
+
+# ! 2012, 469 标题过长

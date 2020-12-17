@@ -3,7 +3,6 @@ Suitable Sample    sample type
 Label conjugated 
 Calibration Range    assay range
 """
-# ! Assay Information 放在了 Detai.Note
 import requests
 from lxml import etree
 from sqlalchemy.ext.declarative import declarative_base
