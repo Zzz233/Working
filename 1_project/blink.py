@@ -22,7 +22,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "projectgrants_v2"
+    __tablename__ = "projectgrants_1986"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     ProjectCode = Column(String(20), nullable=True, comment="项目批准号")
     ProjectName = Column(String(200), nullable=True, comment="")
@@ -52,20 +52,22 @@ pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, 
 r = redis.Redis(connection_pool=pool)
 
 
-def crawler(page):
+def crawler(year, page):
     referer_page = int(page) - 1
     UA = {
         "Host": "fund.keyanzhiku.com",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "Referer": f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/px_year/desc/p/{page}.html",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
         "Accept-Encoding": "gzip, deflate",
-        "Accept-Language": "zh-CN,zh;q=0.9",
-        "Cookie": "PHPSESSID=j56i8i39kk9c24jbh75te2dko0",
+        "Connection": "keep-alive",
+        "Referer": f"http://fund.keyanzhiku.com/Index/index/start_year/{year}/end_year/{year}/xmid/0/search/1/px_year/desc/p/{referer_page}.html",
+        "Cookie": "PHPSESSID=djcet75ohhmtadbgq3lp20r2c3",
+        "Upgrade-Insecure-Requests": "1",
+        "Pragma": "no-cache",
+        "Cache-Control": "no-cache",
     }
-    url = f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/px_year/desc/p/{page}.html"
+    url = f"http://fund.keyanzhiku.com/Index/index/start_year/{year}/end_year/{year}/xmid/0/search/1/px_year/desc/p/{page}.html"
     results = []
     resp = requests.get(url=url, headers=UA)
     lxml = etree.HTML(resp.text)
@@ -162,10 +164,12 @@ def crawler(page):
 if __name__ == "__main__":
     # for page_no in range(1):
     while r.exists("keyanzhiku_pagenum"):
-        page_no = r.lpop("keyanzhiku_pagenum")
-        print(page_no)
+        extract = r.lpop("keyanzhiku_pagenum")
+        page_no = extract.split(",")[1]
+        year_redis = extract.split(",")[0]
+        print(extract)
         final_data = []
-        for item in crawler(page_no):
+        for item in crawler(year_redis, page_no):
             l_url = item[0]
             l_title = item[1]
             l_leader = item[2]
@@ -200,4 +204,4 @@ if __name__ == "__main__":
             session.rollback()
             r.rpush("keyanzhiku_pagenum", page_no)
             print(e)
-        time.sleep(random.uniform(0.5, 1.5))
+        time.sleep(random.uniform(1.5, 1.5))
