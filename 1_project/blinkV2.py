@@ -22,7 +22,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "projectgrants_v2"
+    __tablename__ = "projectgrants"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     ProjectCode = Column(String(20), nullable=True, comment="项目批准号")
     ProjectName = Column(String(200), nullable=True, comment="")
@@ -60,12 +60,12 @@ def crawler(page):
         "Upgrade-Insecure-Requests": "1",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "Referer": f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/px_year/desc/p/{page}.html",
+        "Referer": f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/p/{referer_page}.html",
         "Accept-Encoding": "gzip, deflate",
         "Accept-Language": "zh-CN,zh;q=0.9",
         "Cookie": "PHPSESSID=j56i8i39kk9c24jbh75te2dko0",
     }
-    url = f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/px_year/desc/p/{page}.html"
+    url = f"http://fund.keyanzhiku.com/Index/index/start_year/0/end_year/0/xmid/0/search/1/p/{page}.html"
     results = []
     resp = requests.get(url=url, headers=UA)
     lxml = etree.HTML(resp.text)
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     while r.exists("keyanzhiku_pagenum"):
         page_no = r.lpop("keyanzhiku_pagenum")
         print(page_no)
-        final_data = []
+        # final_data = []
         for item in crawler(page_no):
             l_url = item[0]
             l_title = item[1]
@@ -190,14 +190,17 @@ if __name__ == "__main__":
                 Status="0",
                 curPage=int(page_no),
             )
-            final_data.append(new_data)
-        session.bulk_save_objects(final_data)
-        try:
-            session.commit()
-            session.close()
-            print("done")
-        except Exception as e:
-            session.rollback()
-            r.rpush("keyanzhiku_pagenum", page_no)
-            print(e)
+
+            # final_data.append(new_data)
+            # session.bulk_save_objects(final_data)
+            if random.session.query(new_data.ProjectCode):
+                session.add(new_data)
+            try:
+                session.commit()
+                session.close()
+                print("done")
+            except Exception as e:
+                session.rollback()
+                r.rpush("keyanzhiku_pagenum", page_no)
+                print(e)
         time.sleep(random.uniform(0.5, 1.5))
