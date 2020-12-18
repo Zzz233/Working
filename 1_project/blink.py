@@ -22,7 +22,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "projectgrants_1986"
+    __tablename__ = "projectgrants"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     ProjectCode = Column(String(20), nullable=True, comment="项目批准号")
     ProjectName = Column(String(200), nullable=True, comment="")
@@ -163,11 +163,11 @@ def crawler(year, page):
 
 if __name__ == "__main__":
     # for page_no in range(1):
-    while r.exists("keyanzhiku_pagenum"):
-        extract = r.lpop("keyanzhiku_pagenum")
-        page_no = extract.split(",")[1]
-        year_redis = extract.split(",")[0]
-        print(extract)
+    for i in range(1):
+        # extract = r.lpop("keyanzhiku_pagenum")
+        page_no = "496"
+        year_redis = "2012"
+        print(page_no, year_redis)
         final_data = []
         for item in crawler(year_redis, page_no):
             l_url = item[0]
@@ -192,18 +192,28 @@ if __name__ == "__main__":
                 ClassificationCode="0",
                 Classification="0",
                 Status="0",
-                curPage=int(page_no),
+            )
+            print(
+                l_approve_num,
+                l_title,
+                l_research_type,
+                l_organization,
+                l_leader,
+                l_cash,
+                l_year,
+                l_key_word,
+                l_url,
             )
             final_data.append(new_data)
-        session.bulk_save_objects(final_data)
-        try:
-            session.commit()
-            session.close()
-            print("done")
-        except Exception as e:
-            session.rollback()
-            r.rpush("keyanzhiku_pagenum", page_no)
-            print(e)
+        # session.bulk_save_objects(final_data)
+        # try:
+        #     session.commit()
+        #     session.close()
+        #     print("done")
+        # except Exception as e:
+        #     session.rollback()
+        #     r.rpush("keyanzhiku_pagenum", page_no)
+        #     print(e)
         time.sleep(random.uniform(1.5, 1.5))
 
 # ! 2012, 469 标题过长
