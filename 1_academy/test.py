@@ -1,31 +1,40 @@
 import requests
 
-proxy_url = "http://httpbapi.dobel.cn/User/getIp&account=ELEEEBY5r1JiN3ep&accountKey=cLSj17Kl5Zr4&num=1&cityId=all&format=text"
-res = requests.get(proxy_url)
-proxy_text = res.text.strip()
-print(proxy_text)
-proxies = {
-    "http": "http://" + proxy_text,
-    "https": "https://" + proxy_text,
+headers = {
+    "Host": "kd.nsfc.gov.cn",
+    "Connection": "keep-alive",
+    "Content-Length": "329",
+    "Accept": "*/*",
+    "X-Requested-With": "XMLHttpRequest",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+    "Content-Type": "application/json",
+    "Origin": "http://kd.nsfc.gov.cn",
+    "Referer": "http://kd.nsfc.gov.cn/baseQuery/supportQuery",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept-Language": "zh-CN,zh;q=0.9",
+    "Cookie": "JSESSIONID=112E75AB8DD56F5BFD37CF4948B53E12",
 }
-print(proxies)
 data = {
-    "page": "",
-    "name": "",
-    "person": "",
-    "no": "",
-    "company": "",
-    "addcomment_s1": "B",
-    "addcomment_s2": "B02",
-    "addcomment_s3": "B0201",
-    "addcomment_s4": "",
-    "money1": "",
-    "money2": "",
-    "startTime": "2019",
-    "endTime": "2019",
-    "subcategory": "",
-    "searchsubmit": "true",
+    "ratifyNo": "",
+    "projectName": "",
+    "personInCharge": "蒋秉坤",
+    "dependUnit": "蚌埠医学院",
+    "code": "",
+    "keywords": "",
+    "ratifyYear": "1986",
+    "conclusionYear": "",
+    "beginYear": "",
+    "endYear": "",
+    "checkDep": "",
+    "checkType": "",
+    "quickQueryInput": "",
+    "adminID": "",
+    "complete": "false",
+    "tryCode": "83ga",
+    "pageNum": 0,
+    "pageSize": 10,
+    "queryType": "input",
 }
-url = "https://www.letpub.com.cn/nsfcfund_search.php?mode=advanced&datakind=list&currentpage=1"
-resp = requests.get(url=url, proxies=proxies)
+url = "http://kd.nsfc.gov.cn/baseQuery/data/supportQueryResultsDataForNew"
+resp = requests.post(url=url, data=data, headers=headers)
 print(resp.text)
