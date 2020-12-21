@@ -322,7 +322,9 @@ class Signalway(object):
 
     def citations(self, html):
         try:
-            citations = len(html.xpath('.//span[@class="list_item1"]'))
+            citations = len(
+                html.xpath('.//span[@class="list_item1" or @class="list_item"]')
+            )
         except Exception:
             return 0
         return citations
@@ -420,7 +422,7 @@ class Signalway(object):
     def sub_citations(self, html):
         results = []
         try:
-            spans = html.xpath('.//span[@class="list_item1"]')
+            spans = html.xpath('.//span[@class="list_item1" or @class="list_item"]')
             for item in spans:
                 text = item.xpath(".//text()")
                 title = "".join(i for i in text).split("  PMID: ")[0].strip()
@@ -455,8 +457,10 @@ class Signalway(object):
 
 
 if __name__ == "__main__":
-    while r.exists("Signalway"):
-        url = r.lpop("Signalway")
+    for i in range(1):
+        # while r.exists("Signalway"):
+        #     url = r.lpop("Signalway")
+        url = "https://www.sabbiotech.com.cn/g-170611-Goat-anti-Mouse-IgG-Secondary-AntibodyHRP-conjugated-L3032.html"
         if "-Conjugated-" in url:
             print("pass")
             continue
@@ -467,99 +471,15 @@ if __name__ == "__main__":
             print(e)
             r.rpush("Signalway", url)
             continue
+
         brand = Signalway().brand()
-        catalog_number = Signalway().catalog_number(lxml)
-        product_name = Signalway().product_name(lxml)
-        antibody_type = Signalway().antibody_type(lxml)
-        sellable = Signalway().sellable(lxml)
-        synonyms = Signalway().synonyms(lxml)
-        application = Signalway().application(lxml)
-        clone_number = Signalway().clone_number(lxml)
-        modified = Signalway().modified(lxml)
-        host_species = Signalway().host_species(lxml)
-        antibody_detail_url = Signalway().antibody_detail_url(url)
-        geneid = Signalway().geneid(lxml)
-        species_reactivity = Signalway().species_reactivity(lxml)
-        immunogen = Signalway().immunogen(lxml)
-        swissprot = Signalway().swissprot(lxml)
-        predicted_mw = Signalway().predicted_mw(lxml)
-        observed_mw = Signalway().observed_mw(lxml)
-        isotype = Signalway().isotype(lxml)
-        purify = Signalway().purify(lxml)
+        catalog_number = "123456"
         citations = Signalway().citations(lxml)
-        dataSheet_url = Signalway().dataSheet_url(lxml)
-        image_qty = Signalway().image_qty(lxml)
 
-        sub_application = Signalway().sub_application(lxml)
-        sub_price = Signalway().sub_price(lxml)
         sub_citations = Signalway().sub_citations(lxml)
-        sub_images = Signalway().sub_images(lxml)
 
-        new_detial = Detail(
-            Brand=brand,
-            Catalog_Number=catalog_number,
-            Product_Name=product_name,
-            Antibody_Type=antibody_type,
-            Sellable=sellable,
-            Synonyms=synonyms,
-            Application=application,
-            # Conjugated=conjugated,
-            Clone_Number=clone_number,
-            # Recombinant_Antibody=recombinant_antibody,
-            Modified=modified,
-            Host_Species=host_species,
-            # Reactivity_Species=reactivity_species,
-            Antibody_detail_URL=antibody_detail_url,
-            GeneId=geneid,
-            # KO_Validation=ko_validation,
-            Species_Reactivity=species_reactivity,
-            SwissProt=swissprot,
-            Immunogen=immunogen,
-            Predicted_MW=predicted_mw,
-            Observed_MW=observed_mw,
-            Isotype=isotype,
-            Purify=purify,
-            Citations=str(citations),
-            DataSheet_URL=dataSheet_url,
-            # Review=review,
-            Image_qty=image_qty,
-        )
-        session.add(new_detial)
-
-        if isinstance(sub_application, str):
-            new_application = Application(
-                Catalog_Number=catalog_number, Note=sub_application
-            )
-            session.add(new_application)
-        elif isinstance(sub_application, list):
-            objects_sub_application = []
-            for sub in sub_application:
-                app = sub[0]
-                dil = sub[1]
-                new_application = Application(
-                    Catalog_Number=catalog_number, Application=app, Dilution=dil
-                )
-                objects_sub_application.append(new_application)
-            session.bulk_save_objects(objects_sub_application)
-        else:
-            pass
-
-        if isinstance(sub_price, list):
-            objects_sub_price = []
-            for sub in sub_price:
-                cat = sub[0]
-                siz = sub[1]
-                pri = sub[2]
-                new_price = Price(
-                    Catalog_Number=catalog_number,
-                    sub_Catalog_Number=cat,
-                    Size=siz,
-                    Price=pri,
-                )
-                objects_sub_price.append(new_price)
-            session.bulk_save_objects(objects_sub_price)
-        else:
-            pass
+        new_detail = Detail()
+        session.add(new_detail)
 
         if isinstance(sub_citations, list):
             objects_sub_citations = []
@@ -575,21 +495,6 @@ if __name__ == "__main__":
                 )
                 objects_sub_citations.append(new_citations)
             session.bulk_save_objects(objects_sub_citations)
-        else:
-            pass
-
-        if isinstance(sub_images, list):
-            objects_sub_images = []
-            for sub in sub_images:
-                img_u = sub[0]
-                img_d = sub[1]
-                new_images = Images(
-                    Catalog_Number=catalog_number,
-                    Image_url=img_u,
-                    Image_description=img_d,
-                )
-                objects_sub_images.append(new_images)
-            session.bulk_save_objects(objects_sub_images)
         else:
             pass
 
