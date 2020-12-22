@@ -59,17 +59,17 @@ for i in range(0, 22510, 200):
                 "field": "category",
                 "value": "Kits and Assays",
                 "display": "Category",
-                "removable": false,
+                "removable": False,
             },
             {
                 "field": "category2",
                 "value": "ELISA",
                 "display": "Secondary Category",
-                "removable": true,
+                "removable": True,
             },
         ],
     }
     with requests.Session() as s:
-        resp = s.post(url=api_url, data=data, headers=headers)
+        resp = s.post(url=api_url, json=data, headers=headers)
         print(resp.text)
     break
