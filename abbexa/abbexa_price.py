@@ -70,14 +70,16 @@ session = DBSession()
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=3)
 r = redis.Redis(connection_pool=pool)
 
-for i in range(1):
-    str = "abx595812|https://www.abbexa.com/25-hydroxyvitamin-d3-hvd3-elisa-kit|{'product_id': '419541', 'option_id': '7407122', 'array': [['96 tests', '15078720']]}"
+while r.exists("abbexa_price"):
+    str = r.lpop("abbexa_price")
+    print(str)
     catano = str.split("|")[0]
     link = str.split("|")[1]
     meta = str.split("|")[2].replace("'", '"')
     json_data = json.loads(meta)
     product_id = json_data["product_id"]
     option_id = json_data["option_id"]
+    results = []
     for item in json_data["array"]:
         size = item[0]
         option_value = item[1]
@@ -108,4 +110,17 @@ for i in range(1):
             resp = s.post(url=url, data=data, headers=headers)
             result_json = resp.json()
             price = result_json["price"]
-            print(catano, size, price)
+            # print(catano, size, price)
+            new_price = Price(Catalog_Number=catano, Size=size, Price=price)
+            results.append(new_price)
+    try:
+        session.bulk_save_objects(results)
+        session.commit()
+        session.close()
+        print("done")
+    except Exception as e:
+        session.rollback()
+        print(e)
+        r.rpush("abbexa_price", str)
+
+    time.sleep(random.uniform(1.0, 2.0))
