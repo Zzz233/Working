@@ -18,7 +18,7 @@ Base = declarative_base()
 
 
 class Detail(Base):
-    __tablename__ = "raybiotech_kit_detail"
+    __tablename__ = "taiclone_kit_detail"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -50,7 +50,7 @@ class Detail(Base):
 
 
 class Citations(Base):
-    __tablename__ = "raybiotech_kit_citations"
+    __tablename__ = "taiclone_kit_citations"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -65,7 +65,7 @@ class Citations(Base):
 
 
 class Images(Base):
-    __tablename__ = "raybiotech_kit_images"
+    __tablename__ = "taiclone_kit_images"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")
@@ -77,7 +77,7 @@ class Images(Base):
 
 
 class Price(Base):
-    __tablename__ = "raybiotech_kit_price"
+    __tablename__ = "taiclone_kit_price"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Catalog_Number = Column(String(40), nullable=True, comment="")

@@ -339,10 +339,13 @@ class Biorbyt(object):
         if citations == 0:
             return results
         else:
-            citations_text = html.xpath('.//div[@id="validation-images"]/p')
-            for item in citations_text:
-                title = item.xpath("./text()")[0].strip()
-                results.append([title])
+            try:
+                citations_text = html.xpath('.//div[@id="validation-images"]/p')
+                for item in citations_text:
+                    title = item.xpath("./text()")[0].strip()
+                    results.append([title])
+            except Exception:
+                return results
         return results
 
     # ======================================================================== #
