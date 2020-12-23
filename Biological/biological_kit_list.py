@@ -14,7 +14,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "abbexa_kit_list"
+    __tablename__ = "biological_kit_list"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -49,10 +49,10 @@ headers = {
 brand = "biological"
 
 api_url = "https://api.usbio.net/api/search"
-for i in range(0, 22510, 200):
+for i in range(10000, 22510, 200):
     data = {
-        "size": 15,
-        "from": 45,
+        "size": 200,
+        "from": i,
         "querystring": "",
         "filters": [
             {
@@ -70,6 +70,33 @@ for i in range(0, 22510, 200):
         ],
     }
     with requests.Session() as s:
-        resp = s.post(url=api_url, json=data, headers=headers)
+        resp = s.post(url=api_url, json=data, headers=headers, timeout=60)
+        # json_data = resp.json()
         print(resp.text)
-    break
+        # results = json_data["hits"]["hits"]
+    #     for item in results:
+    #         catanum = item["_source"]["catalogNumber"]
+    #         name = item["_source"]["productNoPrefix"]
+    #         link = (
+    #             "https://www.usbio.net/kits/"
+    #             + catanum
+    #             + "/"
+    #             + name.lower()
+    #             .replace("&trade;", "trade")
+    #             .replace("(", "")
+    #             .replace(")", "")
+    #             .replace(",", "")
+    #             .replace(" ", "-")
+    #         )
+    #         new_data = Data(
+    #             Brand=brand, Catalog_Number=catanum, Detail_url=link, Product_Name=name
+    #         )
+    #         session.add(new_data)
+    # try:
+    #     session.commit()
+    #     session.close()
+    #     print(i, "done")
+    # except Exception as e:
+    #     session.rollback()
+    #     print(e)
+    # time.sleep(random.uniform(0.5, 1.0))

@@ -91,28 +91,35 @@ while r.exists("abbexa_price"):
                 "product_id": product_id,
             }
             headers = {
-                "Host": "www.abbexa.com",
+                # "Host": "www.abbexa.com",
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0",
-                "Accept": "application/json, text/javascript, */*; q=0.01",
-                "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
-                "Accept-Encoding": "gzip, deflate, br",
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-Requested-With": "XMLHttpRequest",
-                "Content-Length": "57",
-                "Origin": "https://www.abbexa.com",
-                "Connection": "keep-alive",
-                "Referer": link,
+                # "Accept": "application/json, text/javascript, */*; q=0.01",
+                # "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
+                # "Accept-Encoding": "gzip, deflate, br",
+                # "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                # "X-Requested-With": "XMLHttpRequest",
+                # "Content-Length": "57",
+                # "Origin": "https://www.abbexa.com",
+                # "Connection": "keep-alive",
+                # "Referer": link,
                 # "Cookie": "PHPSESSID=90554d0188c8e2a7fa47551bdc3065c6; language=en; currency=USD; _gcl_au=1.1.678391277.1608168886; _ga=GA1.2.61988102.1608168887; _gid=GA1.2.713055285.1608168887; _gat_gtag_UA_41647028_1=1",
-                "Pragma": "no-cache",
-                "Cache-Control": "no-cache",
+                # "Pragma": "no-cache",
+                # "Cache-Control": "no-cache",
             }
             url = "https://www.abbexa.com/index.php?route=module%2Foption_change_price_change%2FgetNewPrice"
-            resp = s.post(url=url, data=data, headers=headers)
-            result_json = resp.json()
-            price = result_json["price"]
-            # print(catano, size, price)
-            new_price = Price(Catalog_Number=catano, Size=size, Price=price)
-            results.append(new_price)
+            try:
+                resp = s.post(url=url, data=data, headers=headers)
+                result_json = resp.json()
+                price = result_json["price"]
+                # print(catano, size, price)
+                new_price = Price(Catalog_Number=catano, Size=size, Price=price)
+                results.append(new_price)
+            except Exception as e:
+                r.rpush("abbexa_price", str)
+                print(e)
+                time.sleep(3)
+                continue
+
     try:
         session.bulk_save_objects(results)
         session.commit()
@@ -120,7 +127,7 @@ while r.exists("abbexa_price"):
         print("done")
     except Exception as e:
         session.rollback()
-        print(e)
         r.rpush("abbexa_price", str)
+        print(e)
 
-    time.sleep(random.uniform(1.0, 2.0))
+    time.sleep(random.uniform(2.0, 4.0))
