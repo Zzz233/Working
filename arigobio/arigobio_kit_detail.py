@@ -382,18 +382,18 @@ class Arigobio(object):
 
 
 if __name__ == "__main__":
-    for i in range(1):
-        # while r.exists("signal_kit_detail"):
-        # extract = r.rpop("signal_kit_detail")
-        extract = "https://www.arigobio.cn/Human-Inflammatory-Cytokine-multiplex-ELISA-Kit-IL1-alpha-IL1-beta-IL6-IL8-GM-CSF-IFN-gamma-MCAF-and-TNF-alpha-ARG80929.html"
+    # for i in range(1):
+    while r.exists("arigobio_kit_detail"):
+        extract = r.rpop("arigobio_kit_detail")
+        # extract = "https://www.arigobio.cn/Human-Inflammatory-Cytokine-multiplex-ELISA-Kit-IL1-alpha-IL1-beta-IL6-IL8-GM-CSF-IFN-gamma-MCAF-and-TNF-alpha-ARG80929.html"
         print(extract)
         try:
             lxml = Arigobio().format(extract)
         except Exception as e:
             print(e)
-            # r.lpush("signal_kit_detail", extract)
-            # time.sleep(30)
-            # print("sleeping...")
+            r.lpush("arigobio_kit_detail", extract)
+            time.sleep(30)
+            print("sleeping...")
             continue
         if lxml is not None:
             brand = Arigobio().brand()
@@ -426,88 +426,85 @@ if __name__ == "__main__":
             sub_price = Arigobio().sub_price(lxml)
             print(sub_price)
 
-        # else:
-        #     r.lpush("signal_kit_detail", extract)
-        #     print("html is none")
-        #     continue
-        # new_detail = Detail(
-        #     Brand=brand,
-        #     Kit_Type=kit_type,
-        #     Catalog_Number=catalog_number,
-        #     Product_Name=product_name,
-        #     Detail_url=detail_url,
-        #     Tests=tests,
-        #     Assay_type=assay_type,
-        #     Detection_Method=detection_method,
-        #     Sample_type=sample_type,
-        #     Assay_length=assay_length,
-        #     Sensitivity=sensitivity,
-        #     Assay_range=assay_range,
-        #     Specificity=specificity,
-        #     Target_Protein=target_protein,
-        #     GeneId=geneid,
-        #     SwissProt=swissprot,
-        #     DataSheet_URL=datasheet_url,
-        #     Review=str(review),
-        #     Image_qty=image_qty,
-        #     Citations=citations,
-        #     Synonyms=synonyms,
-        #     Conjugate=conjugate,
-        #     Species_Reactivity=species_reactivity,
-        #     Note=str(note),
-        # )
-        # session.add(new_detail)
+        else:
+            r.lpush("arigobio_kit_detail", extract)
+            print("html is none")
+            continue
+        new_detail = Detail(
+            Brand=brand,
+            Kit_Type=kit_type,
+            Catalog_Number=catalog_number,
+            Product_Name=product_name,
+            Detail_url=detail_url,
+            Tests=tests,
+            # Assay_type=assay_type,
+            # Detection_Method=detection_method,
+            Sample_type=sample_type,
+            Assay_length=assay_length,
+            Sensitivity=sensitivity,
+            Assay_range=assay_range,
+            Specificity=specificity,
+            Target_Protein=target_protein,
+            GeneId=geneid,
+            SwissProt=swissprot,
+            DataSheet_URL=datasheet_url,
+            Review=str(review),
+            Image_qty=image_qty,
+            Citations=citations,
+            Synonyms=synonyms,
+            Conjugate=conjugate,
+            Species_Reactivity=species_reactivity,
+            # Note=str(note),
+        )
+        session.add(new_detail)
 
-        # if sub_citations:
-        #     objects_sub_citations = []
-        #     for sub in sub_citations:
-        #         sub_pid = sub[0]
-        #         sub_tit = sub[1]
-        #         sub_pul = sub[2]
+        if sub_citations:
+            objects_sub_citations = []
+            for sub in sub_citations:
+                sub_pid = sub[0]
+                sub_tit = sub[1]
+                sub_pul = sub[2]
 
-        #         new_citations = Citations(
-        #             Catalog_Number=catalog_number,
-        #             PMID=sub_pid,
-        #             Article_title=sub_tit,
-        #             Pubmed_url=sub_pul,
-        #         )
-        #         objects_sub_citations.append(new_citations)
-        #     session.bulk_save_objects(objects_sub_citations)
+                new_citations = Citations(
+                    Catalog_Number=catalog_number,
+                    PMID=sub_pid,
+                    Article_title=sub_tit,
+                    Pubmed_url=sub_pul,
+                )
+                objects_sub_citations.append(new_citations)
+            session.bulk_save_objects(objects_sub_citations)
 
-        # if sub_images:
-        #     objects_sub_images = []
-        #     for sub in sub_images:
-        #         img = sub[0]
-        #         des = sub[1]
+        if sub_images:
+            objects_sub_images = []
+            for sub in sub_images:
+                img = sub[0]
+                des = sub[1]
+                new_images = Images(
+                    Catalog_Number=catalog_number, Image_url=img, Image_description=des
+                )
+                objects_sub_images.append(new_images)
+            session.bulk_save_objects(objects_sub_images)
 
-        #         new_images = Images(
-        #             Catalog_Number=catalog_number, Image_url=img, Image_description=des
-        #         )
-        #         objects_sub_images.append(new_images)
-        #     session.bulk_save_objects(objects_sub_images)
+        if sub_price:
+            objects_sub_price = []
+            for sub in sub_price:
+                sub_s = sub[0]
+                sub_p = sub[1]
 
-        # if sub_price:
-        #     objects_sub_price = []
-        #     for sub in sub_price:
-        #         sub_c = sub[0]
-        #         sub_s = sub[1]
-        #         sub_p = sub[2]
+                new_price = Price(
+                    Catalog_Number=catalog_number,
+                    Size=sub_s,
+                    Price=sub_p,
+                )
+                objects_sub_price.append(new_price)
+            session.bulk_save_objects(objects_sub_price)
 
-        #         new_price = Price(
-        #             Catalog_Number=catalog_number,
-        #             sub_Catalog_Number=sub_c,
-        #             Size=sub_s,
-        #             Price=sub_p,
-        #         )
-        #         objects_sub_price.append(new_price)
-        #     session.bulk_save_objects(objects_sub_price)
-
-        # try:
-        #     session.commit()
-        #     session.close()
-        #     print("done")
-        # except Exception as e:
-        #     r.lpush("signal_kit_detail", extract)
-        #     session.rollback()
-        #     print(e)
-        # time.sleep(random.uniform(1.0, 1.5))
+        try:
+            session.commit()
+            session.close()
+            print("done")
+        except Exception as e:
+            r.lpush("arigobio_kit_detail", extract)
+            session.rollback()
+            print(e)
+        time.sleep(random.uniform(1.0, 1.5))
