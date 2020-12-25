@@ -348,7 +348,6 @@ class Raybiotech(object):
     # Citations表
     def sub_citations(self, html):
         results = []
-
         lis = html.xpath(
             './/div[@class="ty-pagination-container cm-pagination-container"][@id="pagination_contents_citations_"]//li'
         )
@@ -356,7 +355,9 @@ class Raybiotech(object):
             for li in lis:
                 title = li.xpath("./a/text()")[0].strip()
                 link = li.xpath("./a/@href")[0].strip()
-                if "https://www.ncbi.nlm.nih.gov/pubmed/" in link:
+                if "?term" in link:
+                    pmid = None
+                elif "https://www.ncbi.nlm.nih.gov/pubmed/" in link:
                     pmid = link.split("gov/pubmed/")[-1]
                 else:
                     pmid = None
@@ -435,7 +436,7 @@ if __name__ == "__main__":
             lxml, text_html = Raybiotech().format(extract)
         except Exception as e:
             print(e)
-            r.lpush("raybiotech_kit_detail", extract)
+            r.lpush("raybiotech_kit_detail", extract1)
             time.sleep(30)
             print("sleeping...")
             continue
@@ -471,7 +472,7 @@ if __name__ == "__main__":
             # print(sub_price)
 
         else:
-            r.lpush("raybiotech_kit_detail", extract)
+            r.lpush("raybiotech_kit_detail", extract1)
             print("html is none")
             continue
         new_detail = Detail(
@@ -508,11 +509,11 @@ if __name__ == "__main__":
             for sub in sub_citations:
                 new_citations = Citations(
                     Catalog_Number=catalog_number,
-                    PMID=sub[0],
-                    Species=sub[1],
-                    Article_title=sub[2],
+                    PMID=sub[4],
+                    Species=sub[2],
+                    Article_title=sub[0],
                     Sample_type=sub[3],
-                    Pubmed_url=sub[4],
+                    Pubmed_url=sub[1],
                 )
                 objects_sub_citations.append(new_citations)
             session.bulk_save_objects(objects_sub_citations)
@@ -550,7 +551,7 @@ if __name__ == "__main__":
             session.close()
             print("done")
         except Exception as e:
-            r.lpush("raybiotech_kit_detail", extract)
+            r.lpush("raybiotech_kit_detail", extract1)
             session.rollback()
             print(e)
         time.sleep(random.uniform(1.0, 1.5))
