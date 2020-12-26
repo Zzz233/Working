@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<gpuz_dump>
+  <version>2.5.0</version>
+  <card>
+    <location>0:2:2</location>
+    <cardname>Intel(R) HD Graphics 4600</cardname>
+    <vendor>Intel</vendor>
+    <vendorid>8086</vendorid>
+    <gpuname>Haswell GT2</gpuname>
+    <diesize>177</diesize>
+    <processsize>22</processsize>
+    <deviceid>0416</deviceid>
+    <subsysid>178D</subsysid>
+    <subvendor>ASUS</subvendor>
+    <subvendorid>1043</subvendorid>
+    <gpurevision></gpurevision>
+    <biosversion></biosversion>
+    <businterface>N/A</businterface>
+    <directxsupport>12 (11_1)</directxsupport>
+    <memtype>DDR3</memtype>
+    <membuswidth>128</membuswidth>
+    <memsize>0</memsize>
+    <numrops>4</numrops>
+    <numtmus>8</numtmus>
+    <numshadersvertex></numshadersvertex>
+    <numshaderspixel></numshaderspixel>
+    <numshadersunified>20</numshadersunified>
+    <driverversion>20.19.15.4549 / Win10 64</driverversion>
+    <fillratepixel>1.6</fillratepixel>
+    <fillratetexel>3.2</fillratetexel>
+    <membandwidth>25.6</membandwidth>
+    <clockgpu>400</clockgpu>
+    <clockmem>800</clockmem>
+    <clockshader></clockshader>
+    <clockgpudefault>400</clockgpudefault>
+    <clockmemdefault>800</clockmemdefault>
+    <clockshaderdefault></clockshaderdefault>
+    <clockgpuboost>1150</clockgpuboost>
+    <clockgpuboostdefault>1150</clockgpuboostdefault>
+    <multigpuname>Multi-GPU</multigpuname>
+    <multigpu0>Disabled</multigpu0>
+    <cuda>0</cuda>
+    <opencl>1</opencl>
+    <dxcompute>1</dxcompute>
+    <physx>0</physx>
+  </card>
+  <card>
+    <location>1:0:0</location>
+    <cardname>NVIDIA GeForce GTX 850M</cardname>
+    <vendor>NVIDIA</vendor>
+    <vendorid>10DE</vendorid>
+    <gpuname>GM107</gpuname>
+    <diesize>148</diesize>
+    <processsize>28</processsize>
+    <deviceid>1391</deviceid>
+    <subsysid>178D</subsysid>
+    <subvendor>ASUS</subvendor>
+    <subvendorid>1043</subvendorid>
+    <gpurevision>A2</gpurevision>
+    <biosversion>82.07.47.00.05</biosversion>
+    <businterface>PCIe x16 3.0 @ x8 3.0</businterface>
+    <directxsupport>12 (11_0)</directxsupport>
+    <memtype>DDR3</memtype>
+    <membuswidth>128</membuswidth>
+    <memsize>2048</memsize>
+    <numrops>16</numrops>
+    <numtmus>40</numtmus>
+    <numshadersvertex></numshadersvertex>
+    <numshaderspixel></numshaderspixel>
+    <numshadersunified>640</numshadersunified>
+    <driverversion>23.21.13.8857 (NVIDIA 388.57) / Win10 64</driverversion>
+    <fillratepixel>14.4</fillratepixel>
+    <fillratetexel>36.1</fillratetexel>
+    <membandwidth>28.8</membandwidth>
+    <clockgpu>902</clockgpu>
+    <clockmem>900</clockmem>
+    <clockshader></clockshader>
+    <clockgpudefault>902</clockgpudefault>
+    <clockmemdefault>900</clockmemdefault>
+    <clockshaderdefault></clockshaderdefault>
+    <clockgpuboost>902</clockgpuboost>
+    <clockgpuboostdefault>902</clockgpuboostdefault>
+    <multigpuname>NVIDIA SLI</multigpuname>
+    <multigpu0>Disabled </multigpu0>
+    <cuda>1</cuda>
+    <opencl>1</opencl>
+    <dxcompute>1</dxcompute>
+    <physx>0</physx>
+  </card>
+</gpuz_dump>
