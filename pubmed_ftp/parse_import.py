@@ -3,7 +3,7 @@ import requests
 from lxml import etree
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index
-from sqlalchemy import Column, String, create_engine
+from sqlalchemy import String, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 
