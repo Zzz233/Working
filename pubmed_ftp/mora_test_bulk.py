@@ -5,6 +5,7 @@ from sqlalchemy import String, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 import redis
+import time
 
 Base = declarative_base()
 
@@ -87,9 +88,11 @@ class Pubmed:
         # while r.exists("ftp_file_path"):
         #     path = self.base_path + r.rpop("ftp_file_path")
         for i in (
-            r"D:\Dev\FTP_DATA\pubmed21n1061.xml",
-            r"D:\Dev\FTP_DATA\pubmed21n1059.xml",
-            r"D:\Dev\FTP_DATA\pubmed21n1056.xml",
+            # r"D:\Dev\FTP_DATA\pubmed21n0850.xml",
+            # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
+            # r"D:\Dev\FTP_DATA\pubmed21n0852.xml",
+            r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
+            r"D:\Dev\FTP_DATA\pubmed21n0849.xml",
         ):
             yield i
 
@@ -142,7 +145,7 @@ class Pubmed:
             journal_vol = None
         # todo Journal_issue
         try:
-            journal_issue = item.xpath(".//Issue/text()")[0].strip()
+            journal_issue = item.xpath(".//Issue/text()")[0].strip()[0:20]
         except Exception:
             journal_issue = None
         # todo Journal_abbreviation
@@ -162,7 +165,7 @@ class Pubmed:
             article_title = None
         # todo Pubdate
         pub_date_text = item.xpath(".//PubDate/*//text()")
-        pub_date = "-".join(i for i in pub_date_text)
+        pub_date = "-".join(i for i in pub_date_text)[0:40]
         if len(pub_date) == 0:
             pub_date = None
         # todo Article_pmid
@@ -174,7 +177,9 @@ class Pubmed:
             article_pmid = None
         # todo Article_pii
         try:
-            article_pii = item.xpath('.//ArticleId[@IdType="pii"]/text()')[0].strip()
+            article_pii = item.xpath('.//ArticleId[@IdType="pii"]/text()')[0].strip()[
+                0:150
+            ]
         except Exception:
             article_pii = None
         # todo Article_doi
@@ -212,11 +217,11 @@ class Pubmed:
         author_results = []
         for author in authorList:
             try:
-                lastName = author.xpath(".//LastName/text()")[0].strip()
+                lastName = author.xpath(".//LastName/text()")[0].strip()[0:100]
             except Exception:
                 lastName = None
             try:
-                foreName = author.xpath(".//ForeName/text()")[0].strip()
+                foreName = author.xpath(".//ForeName/text()")[0].strip()[0:100]
             except Exception:
                 foreName = None
             try:
@@ -302,6 +307,7 @@ class Pubmed:
         return new_detail, author_results, keyword_results, new_abstract, grants_results
 
     def insert(self, detail, author, keyword, abstract, grants):
+        time_start = time.time()
         session.bulk_save_objects(detail)
         session.bulk_save_objects(author)
         session.bulk_save_objects(keyword)
@@ -314,6 +320,8 @@ class Pubmed:
         except Exception as e:
             session.rollback()
             print(e)
+        time_end = time.time()
+        print("totally cost", time_end - time_start)
 
     def run(self):
         for path in self.get_path():
