@@ -44,7 +44,7 @@ headers = {
     # "Pragma": "no-cache",
     # "Cache-Control": "no-cache",
 }
-for i in range(1):
+for i in range(1, 133):
     url = f"https://www.assaybiotechnology.com/category-91_97-{i}.html"
     with requests.Session() as s:
         resp = s.get(url=url, headers=headers, timeout=120)
@@ -53,17 +53,15 @@ for i in range(1):
         for item in divs:
             link = item.xpath("./a/@href")[0].strip()
             catano = item.xpath("./a/text()")[0].strip()
-            print(link, catano)
-    #     new_data = Data(
-    #             Brand=brand, Catalog_Number=catano, Product_Name=name, Detail_url=link
-    #         )
-    #         try:
-    #             session.add(new_data)
-    #             session.commit()
-    #             session.close()
-    #         except Exception as e:
-    #             session.rollback()
-    #             print(e)
-    #             continue
-    #     print(i, "done")
-    # time.sleep(random.uniform(1.0, 1.5))
+            # print(link, catano)
+            new_data = Data(Brand=brand, Catalog_Number=catano, Detail_url=link)
+            try:
+                session.add(new_data)
+                session.commit()
+                session.close()
+            except Exception as e:
+                session.rollback()
+                print(e)
+                continue
+        print(i, "done")
+    time.sleep(random.uniform(1.0, 1.5))
