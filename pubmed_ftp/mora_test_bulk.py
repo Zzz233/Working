@@ -91,8 +91,8 @@ class Pubmed:
             # r"D:\Dev\FTP_DATA\pubmed21n0850.xml",
             # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
             # r"D:\Dev\FTP_DATA\pubmed21n0852.xml",
-            r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
-            r"D:\Dev\FTP_DATA\pubmed21n0849.xml",
+            # r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
+            # r"D:\Dev\FTP_DATA\pubmed21n0849.xml",
         ):
             yield i
 
@@ -140,7 +140,7 @@ class Pubmed:
             journal_issn_electronic = None
         # todo Journal_vol
         try:
-            journal_vol = item.xpath(".//Volume/text()")[0].strip()
+            journal_vol = item.xpath(".//Volume/text()")[0].strip()[0:50]
         except Exception:
             journal_vol = None
         # todo Journal_issue
@@ -325,6 +325,7 @@ class Pubmed:
 
     def run(self):
         for path in self.get_path():
+            print(path)
             detail_data = []
             author_data = []
             keyword_data = []
