@@ -104,16 +104,17 @@ r = redis.Redis(connection_pool=pool)
 class Adipogen(object):
     headers = {
         "Host": "adipogen.com",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.88 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2",
-        # 'Accept-Encoding': 'gzip, deflate, br',
+        # "Accept-Encoding": "gzip, deflate, br",
+        "Referer": "https://adipogen.com/elisa-kits.html?p=1",
         "Connection": "keep-alive",
-        "Referer": "https://adipogen.com/elisa-kits.html?p=2",
-        "Cookie": "store=cn",
+        "Cookie": "mage-translation-storage=%7B%7D; mage-translation-file-version=%7B%7D; PHPSESSID=9bb80934853ffb3babfa13bc7df0ffbc; form_key=iNlLuqb9Ql5ueXfV; mage-cache-storage=%7B%7D; mage-cache-storage-section-invalidation=%7B%7D; mage-cache-sessid=true; _ga=GA1.2.658866885.1609297013; _gid=GA1.2.1551139616.1609297013; form_key=iNlLuqb9Ql5ueXfV; store=cn; X-Magento-Vary=0af65036ebb608ce5a0a29a665067cc29db28878; mage-messages=; section_data_ids=%7B%22cart%22%3A1609297037%7D",
         "Upgrade-Insecure-Requests": "1",
         "Pragma": "no-cache",
         "Cache-Control": "no-cache",
+        "TE": "Trailers",
     }
 
     def format(self, url):
@@ -132,13 +133,11 @@ class Adipogen(object):
         return "elisa kit"
 
     def catalog_number(self, html):
-        mora = html.xpath('.//dd[@itemprop="sku"]/text()')[0].strip()
+        mora = html.xpath('.//span[@itemprop="sku"]/text()')[0].strip()
         return mora
 
     def product_name(self, html):
-        mora = html.xpath(
-            './/h1[@class="productView-title main-heading"][@itemprop="name"]/text()'
-        )[0].strip()
+        mora = html.xpath('.//span[@itemprop="name"][@class="base"]/text()')[0].strip()
         return mora
 
     def detail_url(self, url):
@@ -146,18 +145,16 @@ class Adipogen(object):
 
     def tests(self, html):  # 48T/96T 使用次数 规格
         try:
-            mora = html.xpath(
-                './/div[@class="item-left"][contains(text(), "Format")]/following-sibling::div[@class="item-right"]/text()'
-            )[0].strip()
+            mora = html.xpath('.//td[@data-th="Quantity"]/p/text()')[0].strip()
             return mora
         except Exception:
             return None
 
     def assay_type(self, html):
         try:
-            mora = html.xpath(
-                './/td[@class="name"][contains(text(), "Short Description:")]/following-sibling::td[@class="value"]/text()'
-            )[0].strip()
+            mora = html.xpath('.//td[@data-th="Assay Type"][@class="col data"]/text()')[
+                0
+            ].strip()
             return mora
         except Exception:
             return None
@@ -173,10 +170,14 @@ class Adipogen(object):
 
     def sample_type(self, html):
         try:
-            mora = html.xpath(
-                './/td[@class="name"][contains(text(), "Short Description:")]/following-sibling::td[@class="value"]/text()'
-            )[0].strip()
-            return mora
+            mora_text = html.xpath(
+                './/td[@data-th="Sample Type"][@class="col data"]/text()'
+            )
+            mora = ",".join(i.strip() for i in mora_text)
+            if len(mora) > 0:
+                return mora
+            else:
+                return None
         except Exception:
             return None
 
@@ -191,18 +192,18 @@ class Adipogen(object):
 
     def sensitivity(self, html):
         try:
-            sensitivity = html.xpath(
-                './/th[contains(text(), "Sensitivity")]/following-sibling::td[1]/text()'
+            mora = html.xpath(
+                './/td[@data-th="Sensitivity"][@class="col data"]/text()'
             )[0].strip()
-            return sensitivity
+            return mora
         except Exception:
             return None
 
     def assay_range(self, html):
         try:
-            mora = html.xpath(
-                './/div[@class="item-left"][contains(text(), "Dynamic Range")]/following-sibling::div[@class="item-right"]/text()'
-            )[0].strip()
+            mora = html.xpath('.//td[@data-th="Range"][@class="col data"]/text()')[
+                0
+            ].strip()
             return mora
         except Exception:
             return None
@@ -246,10 +247,8 @@ class Adipogen(object):
     def datasheet_url(self, html):
         try:
             mora = (
-                "https://www.assaybiotechnology.com/"
-                + html.xpath(
-                    './/a[contains(text(), "产品说明书")][@class="datasheet"]/@href'
-                )[0].strip()
+                "https://adipogen.com"
+                + html.xpath('.//td[@data-th="Datasheet"]/a/@href')[0].strip()
             )
             return mora
         except Exception:
@@ -259,20 +258,16 @@ class Adipogen(object):
         return 0
 
     def image_qty(self, html):
-        try:
-            mora = len(html.xpath(".//li[@data-image-gallery-main]/a/img"))
-            return mora
-        except Exception:
-            return None
+        return 0
 
     def citations(self, html):
         return 0
 
     def synonyms(self, html):
         try:
-            mora_text = html.xpath('.//meta[@name="keywords"]/@content')[0].replace(
-                ", ", ","
-            )
+            mora_text = html.xpath(
+                './/td[@data-th="Synonyms"][@class="col data"]/text()'
+            )[0].strip()
             return mora_text
         except Exception:
             return None
@@ -365,82 +360,81 @@ class Adipogen(object):
 
 
 if __name__ == "__main__":
-    for i in range(1):
-        # while r.exists("stjohnslabs_kit_detail"):
-        # extract = r.rpop("stjohnslabs_kit_detail")
-        extract = "https://stjohnslabs.com/human-alpha-1-antichymotrypsin-elisa-kit-a1act-stje0000141/"
+    # for i in range(1):
+    while r.exists("adipogen_kit_detail"):
+        extract = r.rpop("adipogen_kit_detail")
+        # extract = "https://adipogen.com/yif-lf-ek0200-alpha-enolase-eno1-non-neuronal-enolase-human-elisa-kit.html"
         print(extract)
         try:
             lxml = Adipogen().format(extract)
-            print(lxml)
         except Exception as e:
             print(e)
-            # r.lpush("adipogen_kit_detail", extract)
-            # print("sleeping...")
+            r.lpush("adipogen_kit_detail", extract)
+            print("sleeping...")
             time.sleep(30)
             continue
-        # if lxml is not None:
-        # brand = Adipogen().brand()
-        # kit_type = Adipogen().kit_type()
-        # catalog_number = Adipogen().catalog_number(lxml)
-        # product_name = Adipogen().product_name(lxml)
-        # detail_url = Adipogen().detail_url(extract)
-        # tests = Adipogen().tests(lxml)
-        # assay_type = Adipogen().assay_type(lxml)
-        # detection_method = Adipogen().detection_method(lxml)
-        # sample_type = Adipogen().sample_type(lxml)
-        # assay_length = Adipogen().assay_length(lxml)
-        # sensitivity = Adipogen().sensitivity(lxml)
-        # assay_range = Adipogen().assay_range(lxml)
-        # specificity = Adipogen().specificity(lxml)
-        # target_protein = Adipogen().target_protein(lxml)
-        # geneid = Adipogen().geneid(lxml)
-        # swissprot = Adipogen().swissprot(lxml)
-        # datasheet_url = Adipogen().datasheet_url(lxml)
-        # review = Adipogen().review(lxml)
-        # image_qty = Adipogen().image_qty(lxml)
-        # citations = Adipogen().citations(lxml)
-        # synonyms = Adipogen().synonyms(lxml)
-        # conjugate = Adipogen().conjugate(lxml)
-        # species_reactivity = Adipogen().species_reactivity(lxml)
-        # note = Adipogen().note(lxml)
+        if lxml is not None:
+            brand = Adipogen().brand()
+            kit_type = Adipogen().kit_type()
+            catalog_number = Adipogen().catalog_number(lxml)
+            product_name = Adipogen().product_name(lxml)
+            detail_url = Adipogen().detail_url(extract)
+            tests = Adipogen().tests(lxml)
+            assay_type = Adipogen().assay_type(lxml)
+            # detection_method = Adipogen().detection_method(lxml)
+            sample_type = Adipogen().sample_type(lxml)
+            # assay_length = Adipogen().assay_length(lxml)
+            sensitivity = Adipogen().sensitivity(lxml)
+            assay_range = Adipogen().assay_range(lxml)
+            # specificity = Adipogen().specificity(lxml)
+            # target_protein = Adipogen().target_protein(lxml)
+            # geneid = Adipogen().geneid(lxml)
+            # swissprot = Adipogen().swissprot(lxml)
+            datasheet_url = Adipogen().datasheet_url(lxml)
+            review = Adipogen().review(lxml)
+            image_qty = Adipogen().image_qty(lxml)
+            citations = Adipogen().citations(lxml)
+            synonyms = Adipogen().synonyms(lxml)
+            # conjugate = Adipogen().conjugate(lxml)
+            # species_reactivity = Adipogen().species_reactivity(lxml)
+            # note = Adipogen().note(lxml)
 
-        # sub_citations = Adipogen().sub_citations(citations, lxml)
-        # sub_images = Adipogen().sub_images(image_qty, lxml)
-        # sub_price = Adipogen().sub_price(lxml)
-        # print(sub_price)
+            # sub_citations = Adipogen().sub_citations(citations, lxml)
+            # sub_images = Adipogen().sub_images(image_qty, lxml)
+            # sub_price = Adipogen().sub_price(lxml)
+            # print(sub_price)
 
-        # else:
-        #     r.lpush("stjohnslabs_kit_detail", extract)
-        #     print("html is none")
-        #     continue
-        # new_detail = Detail(
-        #     Brand=brand,
-        #     Kit_Type=kit_type,
-        #     Catalog_Number=catalog_number,
-        #     Product_Name=product_name,
-        #     Detail_url=detail_url,
-        #     Tests=tests,
-        #     Assay_type=assay_type,
-        #     Detection_Method=detection_method,
-        #     Sample_type=sample_type,
-        #     Assay_length=assay_length,
-        #     Sensitivity=sensitivity,
-        #     Assay_range=assay_range,
-        #     Specificity=specificity,
-        #     Target_Protein=target_protein,
-        #     GeneId=geneid,
-        #     SwissProt=swissprot,
-        #     DataSheet_URL=datasheet_url,
-        #     Review=str(review),
-        #     Image_qty=image_qty,
-        #     Citations=citations,
-        #     Synonyms=synonyms,
-        #     Conjugate=conjugate,
-        #     Species_Reactivity=species_reactivity,
-        #     Note=str(note),
-        # )
-        # session.add(new_detail)
+        else:
+            r.lpush("adipogen_kit_detail", extract)
+            print("html is none")
+            continue
+        new_detail = Detail(
+            Brand=brand,
+            Kit_Type=kit_type,
+            Catalog_Number=catalog_number,
+            Product_Name=product_name,
+            Detail_url=detail_url,
+            Tests=tests,
+            Assay_type=assay_type,
+            # Detection_Method=detection_method,
+            Sample_type=sample_type,
+            # Assay_length=assay_length,
+            Sensitivity=sensitivity,
+            Assay_range=assay_range,
+            # Specificity=specificity,
+            # Target_Protein=target_protein,
+            # GeneId=geneid,
+            # SwissProt=swissprot,
+            DataSheet_URL=datasheet_url,
+            Review=str(review),
+            Image_qty=image_qty,
+            Citations=citations,
+            Synonyms=synonyms,
+            # Conjugate=conjugate,
+            # Species_Reactivity=species_reactivity,
+            # Note=str(note),
+        )
+        session.add(new_detail)
 
         # if sub_citations:
         #     objects_sub_citations = []
@@ -478,12 +472,12 @@ if __name__ == "__main__":
         #         objects_sub_price.append(new_price)
         #     session.bulk_save_objects(objects_sub_price)
 
-        # try:
-        #     session.commit()
-        #     session.close()
-        #     print("done")
-        # except Exception as e:
-        #     r.lpush("stjohnslabs_kit_detail", extract)
-        #     session.rollback()
-        #     print(e)
-        # time.sleep(random.uniform(1.0, 1.5))
+        try:
+            session.commit()
+            session.close()
+            print("done")
+        except Exception as e:
+            r.lpush("adipogen_kit_detail", extract)
+            session.rollback()
+            print(e)
+        time.sleep(random.uniform(1.0, 1.5))
