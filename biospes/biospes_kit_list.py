@@ -12,7 +12,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "abbkine_kit_list"
+    __tablename__ = "biospes_kit_list"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Brand = Column(String(40), nullable=True, comment="")
@@ -29,22 +29,22 @@ engine = create_engine(
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
-brand = "abbkine"
+brand = "biospes"
 
-for i in range(124, 450):
-    url = f"https://www.abbkine.com/product-category/assay-kit/elisa-kit/page/{i}/"
+for i in range(1, 50):
+    url = f"http://www.biospes.com/plus/list.php?tid=10&TotalResult=389&PageNo={i}"
     with requests.Session() as s:
         resp = s.get(url=url)
         lxml = etree.HTML(resp.text)
-        divs = lxml.xpath('//div[@class="box-rht"]/div[@class="cls-item"]')
+        divs = lxml.xpath('//div[@class="product"]/div[@class="list"]')
         for item in divs:
-            link = item.xpath(
-                './div[@class="type-text"]/div[@class="text-tit"]/h3/a/@href'
-            )[0].strip()
-            catano = item.xpath(
-                './div[@class="type-text"]/div[@class="text-tit"]/h3/a/span[@class="size"]/text()'
-            )[0].strip()
-            new_data = Data(Brand=brand, Catalog_Number=catano, Detail_url=link)
+            name = item.xpath('./div[@class="info"]/h3/a/text()')[0].strip()
+            link = (
+                "http://www.biospes.com"
+                + item.xpath('./div[@class="info"]/h3/a/@href')[0].strip()
+            )
+            # print(name, link)
+            new_data = Data(Brand=brand, Product_Name=name, Detail_url=link)
             try:
                 session.add(new_data)
                 session.commit()
@@ -54,4 +54,4 @@ for i in range(124, 450):
                 print(e)
                 continue
         print(i, "done")
-    time.sleep(random.uniform(1.5, 3.0))
+    time.sleep(random.uniform(1.0, 1.5))
