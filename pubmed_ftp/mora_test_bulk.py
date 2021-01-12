@@ -19,6 +19,7 @@ class Detail(Base):
     Journal_title = Column(String(200), nullable=True, comment="")
     Journal_ISSN_print = Column(String(40), nullable=True, comment="")
     Journal_ISSN_electronic = Column(String(40), nullable=True, comment="")
+    Journal_ISSN_link = Column(String(40), nullable=True, comment="")
     Journal_vol = Column(String(20), nullable=True, comment="")
     Journal_issue = Column(String(20), nullable=True, comment="")
     Journal_abbreviation = Column(String(50), nullable=True, comment="")
@@ -79,8 +80,8 @@ class Reference(Base):
     Article_pmid = Column(String(20), nullable=True, comment="")
     Citation_detail = Column(String(100), nullable=True, comment="")
     Citation_pmid = Column(String(100), nullable=True, comment="")
-    Citation_pmc = Column(String(100), nullable=True, comment="")
-    Citation_doi = Column(String(100), nullable=True, comment="")
+    # Citation_pmc = Column(String(100), nullable=True, comment="")
+    # Citation_doi = Column(String(100), nullable=True, comment="")
 
 
 class Publication(Base):
@@ -133,7 +134,7 @@ class Pubmed:
         # while r.exists("ftp_file_path"):
         #     path = self.base_path + r.rpop("ftp_file_path")
         for i in (
-            r"D:/pubmed21n1064.xml",
+            r"D:/pubmed21n1057.xml",
             # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
             # r"D:\Dev\FTP_DATA\pubmed21n0852.xml",
             # r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
@@ -222,6 +223,13 @@ class Pubmed:
             )[0].strip()
         except Exception:
             journal_issn_electronic = None
+        # todo Journal_ISSN_link
+        try:
+            journal_issn_link = item.xpath(".//MedlineJournalInfo/ISSNLinking/text()")[
+                0
+            ].strip()
+        except Exception:
+            journal_issn_link = None
         # todo Journal_vol
         try:
             journal_vol = item.xpath(".//Volume/text()")[0].strip()[0:50]
@@ -305,6 +313,7 @@ class Pubmed:
             Journal_title=journal_title,
             Journal_ISSN_print=journal_issn_print,
             Journal_ISSN_electronic=journal_issn_electronic,
+            Journal_ISSN_link=journal_issn_link,
             Journal_vol=journal_vol,
             Journal_issue=journal_issue,
             Journal_abbreviation=journal_abbreviation,
@@ -440,26 +449,29 @@ class Pubmed:
                 )[0].strip()
             except Exception:
                 citation_pmid = None
-            try:
-                citation_doi = reference.xpath(
-                    './ArticleIdList/ArticleId[@IdType="doi"]/text()'
-                )[0].strip()
-            except Exception:
-                citation_doi = None
-            try:
-                citation_pmc = reference.xpath(
-                    './ArticleIdList/ArticleId[@IdType="pmc"]/text()'
-                )[0].strip()
-            except Exception:
-                citation_pmc = None
-            new_reference = Reference(
-                Article_pmid=article_pmid,
-                Citation_detail=citation_detail,
-                Citation_pmid=citation_pmid,
-                Citation_doi=citation_doi,
-                Citation_pmc=citation_pmc,
-            )
-            reference_results.append(new_reference)
+            # try:
+            #     citation_doi = reference.xpath(
+            #         './ArticleIdList/ArticleId[@IdType="doi"]/text()'
+            #     )[0].strip()
+            # except Exception:
+            #     citation_doi = None
+            # try:
+            #     citation_pmc = reference.xpath(
+            #         './ArticleIdList/ArticleId[@IdType="pmc"]/text()'
+            #     )[0].strip()
+            # except Exception:
+            #     citation_pmc = None
+            if citation_pmid is None:
+                pass
+            else:
+                new_reference = Reference(
+                    Article_pmid=article_pmid,
+                    Citation_detail=citation_detail,
+                    Citation_pmid=citation_pmid,
+                    # Citation_doi=citation_doi,
+                    # Citation_pmc=citation_pmc,
+                )
+                reference_results.append(new_reference)
 
         return (
             new_detail,
