@@ -33,6 +33,7 @@ class Detail(Base):
     Article_abstract = Column(Text, nullable=True, comment="")
     Article_keyword = Column(String(2000), nullable=True, comment="")
     Article_type = Column(String(200), nullable=True, comment="")
+    Article_reftype = Column(String(200), nullable=True, comment="")
 
 
 # class Abstract(Base):
@@ -193,6 +194,34 @@ class Pubmed:
             except Exception:
                 pass
 
+        # ? Article_comments_corrections 表
+        correctionsList = item.xpath(
+            ".//CommentsCorrectionsList/CommentsCorrections[@RefType]"
+        )
+        correctionsList_results = []
+        correctionsList_results_2 = []
+        for correct in correctionsList:
+            try:
+                refType = correct.xpath("@RefType")[0].strip()
+            except Exception:
+                refType = None
+            try:
+                corrections_pmid = correct.xpath('./PMID[@Version="1"]/text()')[
+                    0
+                ].strip()
+            except Exception:
+                corrections_pmid = None
+            if refType is None:
+                pass
+            else:
+                new_corrections = Corrections(
+                    Article_pmid=article_pmid,
+                    Article_reftype=refType,
+                    comments_corrections_pmid=corrections_pmid,
+                )
+                correctionsList_results_2.append(refType)
+                correctionsList_results.append(new_corrections)
+
         # ? pubmed_article_detail 表
         # todo PMID_version
         pmid_version_text = item.xpath('./MedlineCitation/PMID[@Version="1"]/text()')
@@ -307,6 +336,11 @@ class Pubmed:
         if len(article_type) == 0:
             article_type = None
 
+        # todo d_refType
+        d_refType = ";".join(i for i in correctionsList_results_2)
+        if len(d_refType) == 0:
+            d_refType = None
+
         new_detail = Detail(
             PMID_version=pmid_version,
             Date_revised=date_revised,
@@ -327,6 +361,7 @@ class Pubmed:
             Article_abstract=abstract,
             Article_keyword=kwd,
             Article_type=article_type,
+            Article_reftype=d_refType,
         )
         # session.add(new_detail)
 
@@ -410,68 +445,45 @@ class Pubmed:
             grants_results.append(new_grant)
         # session.bulk_save_objects(grants_results)
 
-        # ? Article_comments_corrections 表
-        correctionsList = item.xpath(
-            ".//CommentsCorrectionsList/CommentsCorrections[@RefType]"
-        )
-        correctionsList_results = []
-        for correct in correctionsList:
-            try:
-                refType = correct.xpath("@RefType")[0].strip()
-            except Exception:
-                refType = None
-            try:
-                corrections_pmid = correct.xpath('./PMID[@Version="1"]/text()')[
-                    0
-                ].strip()
-            except Exception:
-                corrections_pmid = None
-            new_corrections = Corrections(
-                Article_pmid=article_pmid,
-                Article_reftype=refType,
-                comments_corrections_pmid=corrections_pmid,
-            )
-            correctionsList_results.append(new_corrections)
-
-        # ? Article_reference 表
-        referenceList = item.xpath(".//ReferenceList/Reference")
-        reference_results = []
-        for reference in referenceList:
-            try:
-                citation_detail = reference.xpath("./Citation/text()")[0].strip()
-                if len(citation_detail) > 100:
-                    citation_detail = None
-            except Exception:
-                citation_detail = None
-            try:
-                citation_pmid = reference.xpath(
-                    './ArticleIdList/ArticleId[@IdType="pubmed"]/text()'
-                )[0].strip()
-            except Exception:
-                citation_pmid = None
-            # try:
-            #     citation_doi = reference.xpath(
-            #         './ArticleIdList/ArticleId[@IdType="doi"]/text()'
-            #     )[0].strip()
-            # except Exception:
-            #     citation_doi = None
-            # try:
-            #     citation_pmc = reference.xpath(
-            #         './ArticleIdList/ArticleId[@IdType="pmc"]/text()'
-            #     )[0].strip()
-            # except Exception:
-            #     citation_pmc = None
-            if citation_pmid is None:
-                pass
-            else:
-                new_reference = Reference(
-                    Article_pmid=article_pmid,
-                    Citation_detail=citation_detail,
-                    Citation_pmid=citation_pmid,
-                    # Citation_doi=citation_doi,
-                    # Citation_pmc=citation_pmc,
-                )
-                reference_results.append(new_reference)
+        # # ? Article_reference 表
+        # referenceList = item.xpath(".//ReferenceList/Reference")
+        # reference_results = []
+        # for reference in referenceList:
+        #     try:
+        #         citation_detail = reference.xpath("./Citation/text()")[0].strip()
+        #         if len(citation_detail) > 100:
+        #             citation_detail = None
+        #     except Exception:
+        #         citation_detail = None
+        #     try:
+        #         citation_pmid = reference.xpath(
+        #             './ArticleIdList/ArticleId[@IdType="pubmed"]/text()'
+        #         )[0].strip()
+        #     except Exception:
+        #         citation_pmid = None
+        #     # try:
+        #     #     citation_doi = reference.xpath(
+        #     #         './ArticleIdList/ArticleId[@IdType="doi"]/text()'
+        #     #     )[0].strip()
+        #     # except Exception:
+        #     #     citation_doi = None
+        #     # try:
+        #     #     citation_pmc = reference.xpath(
+        #     #         './ArticleIdList/ArticleId[@IdType="pmc"]/text()'
+        #     #     )[0].strip()
+        #     # except Exception:
+        #     #     citation_pmc = None
+        #     if citation_pmid is None:
+        #         pass
+        #     else:
+        #         new_reference = Reference(
+        #             Article_pmid=article_pmid,
+        #             Citation_detail=citation_detail,
+        #             Citation_pmid=citation_pmid,
+        #             # Citation_doi=citation_doi,
+        #             # Citation_pmc=citation_pmc,
+        #         )
+        #         reference_results.append(new_reference)
 
         return (
             new_detail,
@@ -480,10 +492,10 @@ class Pubmed:
             grants_results,
             pType_results,
             correctionsList_results,
-            reference_results,
+            # reference_results,
         )
 
-    def insert(self, detail, author, keyword, grants, p_type, corrections, reference):
+    def insert(self, detail, author, keyword, grants, p_type, corrections):  # reference
         time_start = time.time()
         session.bulk_save_objects(detail)
         session.bulk_save_objects(author)
@@ -491,7 +503,7 @@ class Pubmed:
         session.bulk_save_objects(grants)
         session.bulk_save_objects(p_type)
         session.bulk_save_objects(corrections)
-        session.bulk_save_objects(reference)
+        # session.bulk_save_objects(reference)
         try:
             session.commit()
             session.close()
@@ -500,7 +512,7 @@ class Pubmed:
             session.rollback()
             print(e)
         time_end = time.time()
-        print("insert cost", time_end - time_start)
+        print("insert cost", (time_end - time_start) / 60)
 
     def run(self):
         for path in self.get_path():
@@ -511,7 +523,7 @@ class Pubmed:
             grants_data = []
             p_type_data = []
             corrections_data = []
-            reference_data = []
+            # reference_data = []
             xml = self.get_content(path)
             time_start = time.time()
             for item in self.parse_xml(xml):
@@ -522,7 +534,7 @@ class Pubmed:
                     grants_list,
                     p_type_list,
                     corrections_list,
-                    reference_list,
+                    # reference_list,
                 ) = self.parse_item(item)
                 if detail_obj:
                     detail_data.append(detail_obj)
@@ -536,10 +548,10 @@ class Pubmed:
                     p_type_data.extend(p_type_list)
                 if corrections_list:
                     corrections_data.extend(corrections_list)
-                if reference_list:
-                    reference_data.extend(reference_list)
+                # if reference_list:
+                #     reference_data.extend(reference_list)
             time_end = time.time()
-            print("parse cost", time_end - time_start)
+            print("parse cost", (time_end - time_start) / 60)
             self.insert(
                 detail_data,
                 author_data,
@@ -547,7 +559,7 @@ class Pubmed:
                 grants_data,
                 p_type_data,
                 corrections_data,
-                reference_data,
+                # reference_data,
             )
 
 
