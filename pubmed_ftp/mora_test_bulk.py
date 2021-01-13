@@ -34,6 +34,7 @@ class Detail(Base):
     Article_keyword = Column(String(2000), nullable=True, comment="")
     Article_type = Column(String(200), nullable=True, comment="")
     Article_reftype = Column(String(200), nullable=True, comment="")
+    Article_language = Column(String(10), nullable=True, comment="")
 
 
 # class Abstract(Base):
@@ -281,7 +282,11 @@ class Pubmed:
             journal_uniqueid = None
         # todo Article_title
         try:
-            article_title = item.xpath(".//ArticleTitle/text()")[0].strip()
+            article_title_text = item.xpath(".//ArticleTitle//text()")
+            article_title = "".join(i for i in article_title_text)
+            if len(article_title) == 0:
+                vernacular_text = item.xpath(".//VernacularTitle//text()")
+                article_title = " ".join(v for v in vernacular_text)
         except Exception:
             article_title = None
         # todo Pub_date
@@ -323,10 +328,19 @@ class Pubmed:
         except Exception:
             article_pmc = None
         # todo Article_abstract
-        abctract_text = item.xpath(".//Abstract[not(@Label)]/AbstractText/text()")
-        abstract = ";".join(i.strip() for i in abctract_text)
-        if len(abstract) == 0:
+        abstract_list = item.xpath(".//Abstract[not(@Label)]/AbstractText")
+        ab_list = []
+        if len(abstract_list) > 0:
+            for dust in abstract_list:
+                text_content = dust.xpath(".//text()")
+                single_abstract = "".join(v for v in text_content)
+                ab_list.append(single_abstract)
+            abstract = ";".join(f for f in ab_list)
+        else:
             abstract = None
+        # abstract = ";".join(i.strip() for i in abctract_text)
+        # if len(abstract) == 0:
+        #     abstract = None
         # todo Article_keyword
         kwd = ";".join(i for i in keyword_results_2)
         if len(kwd) == 0:
@@ -340,6 +354,12 @@ class Pubmed:
         d_refType = ";".join(i for i in correctionsList_results_2)
         if len(d_refType) == 0:
             d_refType = None
+
+        # todo Article_language
+        try:
+            article_language = item.xpath(".//Language/text()")[0].strip()
+        except Exception:
+            article_language = None
 
         new_detail = Detail(
             PMID_version=pmid_version,
@@ -362,6 +382,7 @@ class Pubmed:
             Article_keyword=kwd,
             Article_type=article_type,
             Article_reftype=d_refType,
+            Article_language=article_language,
         )
         # session.add(new_detail)
 
