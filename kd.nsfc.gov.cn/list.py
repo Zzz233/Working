@@ -82,14 +82,15 @@ class Nsfc:
         }
 
     def get_request_data(self):  # 从redis获取payload参数
-        while r.exists("search_data"):
-            extract = r.lpop("search_data")
+        while r.exists("search_with_pNum"):
+            extract = r.lpop("search_with_pNum")
             yield extract
 
     def crawler(self, redis_data, proxies):  # int 返回该请求参数的总结果数量 & 保存第一页的数据
         code = redis_data.split(",")[0]
         projectType = redis_data.split(",")[2]
         conclusionYear = redis_data.split(",")[3]
+        pageNum = int(redis_data.split(",")[4])
         payload = {
             "ratifyNo": "",
             "projectName": "",
@@ -113,7 +114,7 @@ class Nsfc:
             "adminID": "",
             "complete": "true",
             # ! 页数
-            "pageNum": 0,
+            "pageNum": pageNum,
             # ! 分页内数量
             "pageSize": 10,
             "queryType": "input",
@@ -123,21 +124,21 @@ class Nsfc:
                 url=self.base_url, json=payload, headers=self.headers, proxies=proxies
             ).json()
             flag_code = json_data["code"]
-            totalRecords = json_data["data"]["iTotalRecords"]
+            # totalRecords = json_data["data"]["iTotalRecords"]
             results = json_data["data"]["resultsData"]
 
-        return flag_code, totalRecords, results  # int
+        return flag_code, results  # int
 
-    def to_new_redis(self, old_redis_str, total):
-        if total > 10:
-            page_size = 10
-            pages = math.ceil(total / page_size)
-            for i in range(1, pages + 1):
-                item = old_redis_str + "," + str(i)
-                r.rpush("search_with_pNum", item)
-                print(item)
-        else:
-            pass
+    # def to_new_redis(self, old_redis_str, total):
+    #     if total > 10:
+    #         page_size = 10
+    #         pages = math.ceil(total / page_size)
+    #         for i in range(1, pages + 1):
+    #             item = old_redis_str + "," + str(i)
+    #             r.rpush("search_with_pNum", item)
+    #             print(item)
+    #     else:
+    #         pass
 
     def parse(self, results):
         if len(results) > 0:
@@ -184,6 +185,8 @@ class Nsfc:
                 )
                 objects.append(new_detail)
             return objects
+        else:
+            print("最后一页为空")
 
     def insert(self, obj):
         session.bulk_save_objects(obj)
@@ -191,9 +194,11 @@ class Nsfc:
             session.commit()
             session.close()
             print("done")
+            return 1
         except Exception as e:
             session.rollback()
             print(e)
+            return 2
 
     def get_proxy(self):
         proxy_url = "http://httpbapi.dobel.cn/User/getIp&account=ELEEEBY5r1JiN3ep&accountKey=cLSj17Kl5Zr4&num=1&cityId=all&format=text"
@@ -206,7 +211,7 @@ class Nsfc:
         return proxies
 
     def back_to_redis(self, item):
-        r.rpush("search_data", item)
+        r.rpush("search_with_pNum", item)
         print("push back")
 
     def run(self):
@@ -214,21 +219,28 @@ class Nsfc:
         for item in self.get_request_data():
             print(item)
             try:
-                flag_code, total, results = self.crawler(item, proxies)
+                flag_code, results = self.crawler(item, proxies)
             except Exception as e:
                 proxies = self.get_proxy()
                 self.back_to_redis(item)
                 print(e)
                 continue
             if flag_code == 200:
-                self.to_new_redis(item, total)
+                # self.to_new_redis(item, total)
                 objects = self.parse(results)
                 if objects:
-                    self.insert(objects)
+                    flag = self.insert(objects)
+                    if flag == 2:
+                        self.back_to_redis(item)
             else:
-                proxies = self.get_proxy()
                 self.back_to_redis(item)
                 print("Error", item)
+                try:
+                    proxies = self.get_proxy()
+                except Exception:
+                    time.sleep(30)
+                    continue
+
             time.sleep(random.uniform(5.5, 7.0))
 
 

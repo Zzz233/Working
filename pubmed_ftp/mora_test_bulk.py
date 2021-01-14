@@ -109,7 +109,7 @@ engine = create_engine(
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 # Redis
-pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=1)
+pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=0)
 r = redis.Redis(connection_pool=pool)
 
 date_json = {
@@ -130,19 +130,19 @@ date_json = {
 
 class Pubmed:
     def __init__(self):
-        self.base_path = "D:/Dev/FTP"
+        self.base_path = "C:/Pubmed/baseline/"
 
     def get_path(self):
-        # while r.exists("ftp_file_path"):
-        #     path = self.base_path + r.rpop("ftp_file_path")
-        for i in (
-            r"D:/pubmed21n1057.xml",
-            # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
-            # r"D:\Dev\FTP_DATA\pubmed21n0852.xml",
-            # r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
-            # r"D:\Dev\FTP_DATA\pubmed21n0849.xml",
-        ):
-            yield i
+        while r.exists("xml_task"):
+            path = self.base_path + r.lpop("xml_task")
+            # for i in (
+            #     r"D:/pubmed21n1057.xml",
+            #     # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
+            #     # r"D:\Dev\FTP_DATA\pubmed21n0852.xml",
+            #     # r"D:\Dev\FTP_DATA\pubmed21n0853.xml",
+            #     # r"D:\Dev\FTP_DATA\pubmed21n0849.xml",
+            # ):
+            yield path
 
     def get_content(self, path):
         xml = etree.parse(path)
@@ -535,6 +535,10 @@ class Pubmed:
         time_end = time.time()
         print("insert cost", (time_end - time_start) / 60)
 
+    def push_back(self, path):
+        r.rpush("task_error", path)
+        print("error push")
+
     def run(self):
         for path in self.get_path():
             print(path)
@@ -573,15 +577,19 @@ class Pubmed:
                 #     reference_data.extend(reference_list)
             time_end = time.time()
             print("parse cost", (time_end - time_start) / 60)
-            self.insert(
-                detail_data,
-                author_data,
-                keyword_data,
-                grants_data,
-                p_type_data,
-                corrections_data,
-                # reference_data,
-            )
+            try:
+                self.insert(
+                    detail_data,
+                    author_data,
+                    keyword_data,
+                    grants_data,
+                    p_type_data,
+                    corrections_data,
+                    # reference_data,
+                )
+            except Exception:
+                self.push_back(path)
+                continue
 
 
 if __name__ == "__main__":
