@@ -1,0 +1,104 @@
+给pubmed_ceshi定制分号分词器
+PUT pubmed_ceshi
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "fenhao": {
+          "type": "pattern",
+          "filter": "lowercase",
+          "pattern": ";"
+        }
+      }
+    }
+  }
+}
+
+
+PUT pubmed_ceshi/_mapping
+{
+  "properties": {
+   "id": {
+     "type": "integer" 
+   },
+   "Journal_title": {
+     "type": "keyword"
+   },
+   "journal_abbreviation": {
+     "type": "keyword"
+   },
+   "Article_title": {
+     "type": "text"
+   },
+   "Pub_date":{
+     "type": "date"
+   },
+   "Article_pmid":{
+     "type": "keyword"
+   },
+   "Article_doi": {
+     "type": "keyword"
+   },
+   "Article_pmc": {
+     "type": "keyword"
+   },
+   "Article_abstract": {
+     "type": "text",
+     "analyzer": "english"
+   },
+   "Article_keyword": {
+     "type": "text",
+     "fielddata": true,
+     "analyzer": "fenhao"
+   },
+   "Article_type": {
+     "type": "text",
+     "fielddata": true,
+     "analyzer": "fenhao"
+   }
+  }
+}
+
+
+GET pubmed_ceshi/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match_phrase": {
+            "Article_abstract": {
+              "query": "il 1"
+            }
+          }
+        },
+        {
+          "match_phrase": {
+            "Article_title": "il 1"
+          }
+        },
+          {
+          "multi_match": {
+            "query": "il 1",
+            "fields": ["Article_keyword^2", "Article_pmc", "Article_pmid", "Article_doi^2"]
+          }
+        }
+      ],
+      "minimum_should_match": 1
+    }
+  }
+}
+
+两种表达式是等价的
+GET pubmed_ceshi/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "il 1",
+      "fields": ["Article_title^2", "Article_keyword^2", "Article_abstract",  "Article_pmc", "Article_pmid", "Article_doi^2"],
+
+      "type":"phrase"
+    }
+  },
+  "from": 0, "size":200
+}
