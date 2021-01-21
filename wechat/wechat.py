@@ -18,7 +18,7 @@ class Data(Base):
 
     Id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Company = Column(String(100), nullable=True, comment="")
-    appmsgid = Column(Integer, nullable=True, comment="")
+    # appmsgid = Column(Integer, nullable=True, comment="")
     digest = Column(String(200), nullable=True, comment="")
     Author = Column(String(100), nullable=True, comment="")
     Title = Column(String(400), nullable=True, comment="")
@@ -81,7 +81,7 @@ class Wechat:
             results = json_data['app_msg_list']
             for item in results:
                 # id
-                appmsgid = item['appmsgid']
+                # appmsgid = item['appmsgid']
                 digest = item['digest']
                 # author
                 title = item['title']
@@ -95,7 +95,7 @@ class Wechat:
                 # doi
                 # add_time
                 new_data = Data(Company=company,
-                                appmsgid=appmsgid,
+                                # appmsgid=appmsgid,
                                 digest=digest,
                                 Title=title,
                                 Link=link,

@@ -531,12 +531,10 @@ class Pubmed:
         try:
             session.commit()
             print("done")
-            flag = 1
+            session.close()
         except Exception as e:
             session.rollback()
             print(e)
-            flag = 2
-        finally:
             session.close()
         time_end = time.time()
         print("insert cost", (time_end - time_start) / 60)
@@ -583,19 +581,21 @@ class Pubmed:
                 #     reference_data.extend(reference_list)
             time_end = time.time()
             print("parse cost", (time_end - time_start) / 60)
-            flag = self.insert(
-                detail_data,
-                author_data,
-                keyword_data,
-                grants_data,
-                p_type_data,
-                corrections_data,
-                # reference_data,
-            )
-            if flag == 2:
+            try:
+                self.insert(
+                    detail_data,
+                    author_data,
+                    keyword_data,
+                    grants_data,
+                    p_type_data,
+                    corrections_data,
+                    # reference_data,
+                )
+            except Exception as e:
                 self.push_back(path)
-                continue
-                # break
+                print(e)
+                # continue
+                break
 
 
 if __name__ == "__main__":
