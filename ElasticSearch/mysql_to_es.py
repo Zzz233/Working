@@ -10,31 +10,41 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "dataDump_s5_summary_operator_loadout"
+    __tablename__ = "pubmed_article_detail"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    platform = Column(String(10), nullable=True, comment="")
-    dateid = Column(String(10), nullable=True, comment="")
-    skillrank = Column(String(10), nullable=True, comment="")
-    role = Column(String(10), nullable=True, comment="")
-    operator = Column(String(25), nullable=True, comment="")
-    primaryweapon = Column(String(25), nullable=True, comment="")
-    secondaryweapon = Column(String(25), nullable=True, comment="")
-    secondarygadget = Column(String(25), nullable=True, comment="")
-    nbwins = Column(String(5), nullable=True, comment="")
-    nbkills = Column(String(5), nullable=True, comment="")
-    nbdeaths = Column(String(5), nullable=True, comment="")
-    nbpicks = Column(String(5), nullable=True, comment="")
+    # id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
+    PMID_version = Column(String(50), nullable=True, comment="")
+    Date_revised = Column(String(20), nullable=True, comment="")
+    Journal_title = Column(String(200), nullable=True, comment="")
+    Journal_ISSN_print = Column(String(40), nullable=True, comment="")
+    Journal_ISSN_electronic = Column(String(40), nullable=True, comment="")
+    Journal_ISSN_link = Column(String(40), nullable=True, comment="")
+    Journal_vol = Column(String(20), nullable=True, comment="")
+    Journal_issue = Column(String(20), nullable=True, comment="")
+    Journal_abbreviation = Column(String(50), nullable=True, comment="")
+    Journal_UniqueID = Column(String(50), nullable=True, comment="")
+    Article_title = Column(String(2000), nullable=True, comment="")
+    Pub_date = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
+    Article_pii = Column(String(50), nullable=True, comment="")
+    Article_doi = Column(String(50), nullable=True, comment="")
+    Article_pmc = Column(String(50), nullable=True, comment="")
+    Article_abstract = Column(Text, nullable=True, comment="")
+    Article_keyword = Column(String(2000), nullable=True, comment="")
+    Article_type = Column(String(200), nullable=True, comment="")
+    Article_reftype = Column(String(200), nullable=True, comment="")
+    Article_language = Column(String(10), nullable=True, comment="")
 
 
 engine = create_engine(
-    "mysql+pymysql://root:pop645649968@127.0.0.1:3306/try_csv?charset=utf8")
+    "mysql+pymysql://root:app1234@192.168.124.2:3306/pubmed_article?charset=utf8"
+)
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 # 使用之前需要修改mysql类中的self.cursor = self.conn.cursor(cursor=pymysql.cursors.DictCursor)，使输出格式变为字典
 
-results = session.query(Data).filter(Data.id < 1000).all()
+results = session.query(Data).limit(30000).all()
 print(results)
 # print(results[1].platform)
 es = Elasticsearch()
@@ -47,23 +57,21 @@ es = Elasticsearch()
 #
 alias_action = (
     {
-        "_index": "r6_test",
-        "_id": i.id,
+        "_index": "pubmed_ceshi",
+        "_id": i.Article_pmid,
         "_source": {
-            # "id": i["id"],
-            "platform": i.platform,
-            "dateid": i.dateid,
-            "skillrank": i.skillrank,
-            "role": i.role,
-            "operator": i.operator,
-            "primaryweapon": i.primaryweapon,
-            "secondaryweapon": i.secondaryweapon,
-            "secondarygadget": i.secondarygadget,
-            "nbwins": i.nbwins,
-            "nbkills": i.nbkills,
-            "nbdeaths": i.nbdeaths,
-            "nbpicks": i.nbpicks,
-        },
+            # "id"i.id"],
+            "Journal_title": i.Journal_title,
+            "journal_abbreviation": i.Journal_abbreviation,
+            "Article_title": i.Article_title,
+            "Pub_date": i.Pub_date,
+            'Article_pmid': i.Article_pmid,
+            'Article_doi': i.Article_doi,
+            'Article_pmc': i.Article_pmc,
+            'Article_abstract': i.Article_abstract,
+            'Article_keyword': i.Article_keyword,
+            'Article_type': i.Article_type
+        }
     } for i in results)
 
 # print(alias_action, next(alias_action))

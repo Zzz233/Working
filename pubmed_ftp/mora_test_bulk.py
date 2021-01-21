@@ -13,7 +13,7 @@ Base = declarative_base()
 class Detail(Base):
     __tablename__ = "pubmed_article_detail"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
+    # id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     PMID_version = Column(String(50), nullable=True, comment="")
     Date_revised = Column(String(20), nullable=True, comment="")
     Journal_title = Column(String(200), nullable=True, comment="")
@@ -26,7 +26,7 @@ class Detail(Base):
     Journal_UniqueID = Column(String(50), nullable=True, comment="")
     Article_title = Column(String(2000), nullable=True, comment="")
     Pub_date = Column(String(20), nullable=True, comment="")
-    Article_pmid = Column(String(30), nullable=True, comment="")
+    Article_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
     Article_pii = Column(String(50), nullable=True, comment="")
     Article_doi = Column(String(50), nullable=True, comment="")
     Article_pmc = Column(String(50), nullable=True, comment="")
@@ -49,7 +49,7 @@ class Keyword(Base):
     __tablename__ = "Article_keyword"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     Key_word = Column(String(200), nullable=True, comment="")
 
 
@@ -57,7 +57,7 @@ class Info(Base):
     __tablename__ = "Author_info"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     LastName = Column(String(100), nullable=True, comment="")
     ForeName = Column(String(100), nullable=True, comment="")
     Initials = Column(String(10), nullable=True, comment="")
@@ -68,7 +68,7 @@ class Grant(Base):
     __tablename__ = "Article_grant"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     Grant_id = Column(String(200), nullable=True, comment="")
     Grant_agency = Column(String(2000), nullable=True, comment="")
     Grant_agency_acronym = Column(String(200), nullable=True, comment="")
@@ -79,7 +79,7 @@ class Reference(Base):
     __tablename__ = "Article_reference"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     Citation_detail = Column(String(100), nullable=True, comment="")
     Citation_pmid = Column(String(100), nullable=True, comment="")
     # Citation_pmc = Column(String(100), nullable=True, comment="")
@@ -89,7 +89,7 @@ class Reference(Base):
 class Publication(Base):
     __tablename__ = "Publication_type"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     Article_type = Column(String(200), nullable=True, comment="")
 
 
@@ -97,7 +97,7 @@ class Corrections(Base):
     __tablename__ = "Article_comments_corrections"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(String(20), nullable=True, comment="")
+    Article_pmid = Column(Integer, nullable=True, comment="")
     Article_reftype = Column(String(200), nullable=True, comment="")
     comments_corrections_pmid = Column(String(20), nullable=True, comment="")
 
@@ -109,7 +109,10 @@ engine = create_engine(
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 # Redis
-pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=0)
+pool = redis.ConnectionPool(host="localhost",
+                            port=6379,
+                            decode_responses=True,
+                            db=0)
 r = redis.Redis(connection_pool=pool)
 
 date_json = {
@@ -133,8 +136,8 @@ class Pubmed:
         self.base_path = "C:/Pubmed/baseline/"
 
     def get_path(self):
-        while r.exists("xml_task"):
-            path = self.base_path + r.lpop("xml_task")
+        while r.exists("task_error"):
+            path = r.lpop("task_error")
             # for i in (
             #     r"D:/pubmed21n1057.xml",
             #     # r"D:\Dev\FTP_DATA\pubmed21n0851.xml",
@@ -159,9 +162,8 @@ class Pubmed:
         # ! article_pmid
         # todo Article_pmid
         try:
-            article_pmid = item.xpath('.//ArticleId[@IdType="pubmed"]/text()')[
-                0
-            ].strip()
+            article_pmid = int(
+                item.xpath('.//ArticleId[@IdType="pubmed"]/text()')[0].strip())
         except Exception:
             article_pmid = None
 
@@ -174,7 +176,8 @@ class Pubmed:
         for keywords in keywordList:
             try:
                 key_word = keywords.xpath("./text()")[0].strip()[0:200]
-                new_keyword = Keyword(Article_pmid=article_pmid, Key_word=key_word)
+                new_keyword = Keyword(Article_pmid=article_pmid,
+                                      Key_word=key_word)
                 keyword_results_2.append(key_word)
                 keyword_results.append(new_keyword)
             except Exception:
@@ -183,13 +186,15 @@ class Pubmed:
         # session.bulk_save_objects(keyword_results)
 
         # ? Publication_type 表
-        publicationTypeList = item.xpath(".//PublicationTypeList/PublicationType[@UI]")
+        publicationTypeList = item.xpath(
+            ".//PublicationTypeList/PublicationType[@UI]")
         pType_results = []
         pTypeList_2 = []
         for pType_item in publicationTypeList:
             try:
                 pType = pType_item.xpath("./text()")[0].strip()
-                new_pType = Publication(Article_pmid=article_pmid, Article_type=pType)
+                new_pType = Publication(Article_pmid=article_pmid,
+                                        Article_type=pType)
                 pTypeList_2.append(pType)
                 pType_results.append(new_pType)
             except Exception:
@@ -197,8 +202,7 @@ class Pubmed:
 
         # ? Article_comments_corrections 表
         correctionsList = item.xpath(
-            ".//CommentsCorrectionsList/CommentsCorrections[@RefType]"
-        )
+            ".//CommentsCorrectionsList/CommentsCorrections[@RefType]")
         correctionsList_results = []
         correctionsList_results_2 = []
         for correct in correctionsList:
@@ -207,9 +211,8 @@ class Pubmed:
             except Exception:
                 refType = None
             try:
-                corrections_pmid = correct.xpath('./PMID[@Version="1"]/text()')[
-                    0
-                ].strip()
+                corrections_pmid = correct.xpath(
+                    './PMID[@Version="1"]/text()')[0].strip()
             except Exception:
                 corrections_pmid = None
             if refType is None:
@@ -225,7 +228,8 @@ class Pubmed:
 
         # ? pubmed_article_detail 表
         # todo PMID_version
-        pmid_version_text = item.xpath('./MedlineCitation/PMID[@Version="1"]/text()')
+        pmid_version_text = item.xpath(
+            './MedlineCitation/PMID[@Version="1"]/text()')
         pmid_version = ",".join(i for i in pmid_version_text)
         if len(pmid_version) == 0:
             pmid_version = "Error"
@@ -241,28 +245,25 @@ class Pubmed:
             journal_title = None
         # todo Journal_ISSN_print
         try:
-            journal_issn_print = item.xpath('.//ISSN[@IssnType="Print"]/text()')[
-                0
-            ].strip()
+            journal_issn_print = item.xpath(
+                './/ISSN[@IssnType="Print"]/text()')[0].strip()
         except Exception:
             journal_issn_print = None
         # todo Journal_ISSN_electronic
         try:
             journal_issn_electronic = item.xpath(
-                './/ISSN[@IssnType="Electronic"]/text()'
-            )[0].strip()
+                './/ISSN[@IssnType="Electronic"]/text()')[0].strip()
         except Exception:
             journal_issn_electronic = None
         # todo Journal_ISSN_link
         try:
-            journal_issn_link = item.xpath(".//MedlineJournalInfo/ISSNLinking/text()")[
-                0
-            ].strip()
+            journal_issn_link = item.xpath(
+                ".//MedlineJournalInfo/ISSNLinking/text()")[0].strip()
         except Exception:
             journal_issn_link = None
         # todo Journal_vol
         try:
-            journal_vol = item.xpath(".//Volume/text()")[0].strip()[0:50]
+            journal_vol = item.xpath(".//Volume/text()")[0].strip()[0:40]
         except Exception:
             journal_vol = None
         # todo Journal_issue
@@ -272,7 +273,8 @@ class Pubmed:
             journal_issue = None
         # todo Journal_abbreviation
         try:
-            journal_abbreviation = item.xpath(".//ISOAbbreviation/text()")[0].strip()
+            journal_abbreviation = item.xpath(
+                ".//ISOAbbreviation/text()")[0].strip()
         except Exception:
             journal_abbreviation = None
         # todo Journal_UniqueID
@@ -312,19 +314,20 @@ class Pubmed:
 
         # todo Article_pii
         try:
-            article_pii = item.xpath('.//ArticleId[@IdType="pii"]/text()')[0].strip()[
-                0:150
-            ]
+            article_pii = item.xpath(
+                './/ArticleId[@IdType="pii"]/text()')[0].strip()[0:100]
         except Exception:
             article_pii = None
         # todo Article_doi
         try:
-            article_doi = item.xpath('.//ArticleId[@IdType="doi"]/text()')[0].strip()
+            article_doi = item.xpath(
+                './/ArticleId[@IdType="doi"]/text()')[0].strip()
         except Exception:
             article_doi = None
         # todo Article_pmc
         try:
-            article_pmc = item.xpath('.//ArticleId[@IdType="pmc"]/text()')[0].strip()
+            article_pmc = item.xpath(
+                './/ArticleId[@IdType="pmc"]/text()')[0].strip()
         except Exception:
             article_pmc = None
         # todo Article_abstract
@@ -351,7 +354,8 @@ class Pubmed:
             article_type = None
 
         # todo d_refType
-        d_refType = ";".join(i for i in correctionsList_results_2)
+        ids = list(set(correctionsList_results_2))
+        d_refType = ";".join(i for i in ids)
         if len(d_refType) == 0:
             d_refType = None
 
@@ -403,18 +407,16 @@ class Pubmed:
             except Exception:
                 initials = None
             try:
-                affiliation_text = author.xpath(".//AffiliationInfo/Affiliation/text()")
-                affiliation = "~".join(i.strip() for i in affiliation_text)[0:2000]
+                affiliation_text = author.xpath(
+                    ".//AffiliationInfo/Affiliation/text()")
+                affiliation = "~".join(i.strip()
+                                       for i in affiliation_text)[0:2000]
                 if len(affiliation) == 0:
                     affiliation = None
             except Exception:
                 affiliation = None
-            if (
-                lastName is None
-                and foreName is None
-                and initials is None
-                and affiliation is None
-            ):
+            if (lastName is None and foreName is None and initials is None
+                    and affiliation is None):
                 pass
             else:
                 new_info = Info(
@@ -516,7 +518,8 @@ class Pubmed:
             # reference_results,
         )
 
-    def insert(self, detail, author, keyword, grants, p_type, corrections):  # reference
+    def insert(self, detail, author, keyword, grants, p_type,
+               corrections):  # reference
         time_start = time.time()
         session.bulk_save_objects(detail)
         session.bulk_save_objects(author)
@@ -527,16 +530,19 @@ class Pubmed:
         # session.bulk_save_objects(reference)
         try:
             session.commit()
-            session.close()
             print("done")
+            flag = 1
         except Exception as e:
             session.rollback()
             print(e)
+            flag = 2
+        finally:
+            session.close()
         time_end = time.time()
         print("insert cost", (time_end - time_start) / 60)
 
     def push_back(self, path):
-        r.rpush("task_error", path)
+        r.rpush("task_error_new", path)
         print("error push")
 
     def run(self):
@@ -577,19 +583,19 @@ class Pubmed:
                 #     reference_data.extend(reference_list)
             time_end = time.time()
             print("parse cost", (time_end - time_start) / 60)
-            try:
-                self.insert(
-                    detail_data,
-                    author_data,
-                    keyword_data,
-                    grants_data,
-                    p_type_data,
-                    corrections_data,
-                    # reference_data,
-                )
-            except Exception:
+            flag = self.insert(
+                detail_data,
+                author_data,
+                keyword_data,
+                grants_data,
+                p_type_data,
+                corrections_data,
+                # reference_data,
+            )
+            if flag == 2:
                 self.push_back(path)
                 continue
+                # break
 
 
 if __name__ == "__main__":
