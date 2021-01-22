@@ -87,6 +87,7 @@ class Corrections(Base):
 
 class Temp(Base):
     __tablename__ = "Temp_PMId"
+    
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     pmId = Column(Integer, nullable=True, comment="")
     xmlname = Column(String(40), nullable=True, comment="")
@@ -441,45 +442,6 @@ class Pubmed:
                 Grant_country=grantCountry,
             )
             grants_results.append(new_grant)
-        # session.bulk_save_objects(grants_results)
-
-        # # ? Article_reference 表
-        # referenceList = item.xpath(".//ReferenceList/Reference")
-        # reference_results = []
-        # for reference in referenceList:
-        #     try:
-        #         citation_detail = reference.xpath("./Citation/text()")[0].strip()
-        #         if len(citation_detail) > 100:
-        #             citation_detail = None
-        #     except Exception:
-        #         citation_detail = None
-        #     try:
-        #         citation_pmid = reference.xpath(
-        #             './ArticleIdList/ArticleId[@IdType="pubmed"]/text()'
-        #         )[0].strip()
-        #     except Exception:
-        #         citation_pmid = None
-        #     # try:
-        #     #     citation_doi = reference.xpath(
-        #     #         './ArticleIdList/ArticleId[@IdType="doi"]/text()'
-        #     #     )[0].strip()
-        #     # except Exception:
-        #     #     citation_doi = None
-        #     # try:
-        #     #     citation_pmc = reference.xpath(
-        #     #         './ArticleIdList/ArticleId[@IdType="pmc"]/text()'
-        #     #     )[0].strip()
-        #     # except Exception:
-        #     #     citation_pmc = None
-        #     if citation_pmid is None:
-        #         pass
-        #     else:
-        #         new_reference = Reference(
-        #             Article_pmid=article_pmid,
-        #             Citation_detail=citation_detail,
-        #             Citation_pmid=citation_pmid,
-        #         )
-        #         reference_results.append(new_reference)
 
         return (
             new_detail,
@@ -488,7 +450,6 @@ class Pubmed:
             grants_results,
             pType_results,
             correctionsList_results,
-            # reference_results,
         )
 
     @contextmanager
@@ -503,13 +464,18 @@ class Pubmed:
             session.close()
 
     def check_data(self):
-        # todo
-        pass
+        '''
+        30000 pmid xml文件名 写入Temp
+        判断pmid是否重复
+
+        从
+        :return:
+        '''
+        with self.session_maker() as db_session:
+            pass
 
     def add_data(self, detail, author, keyword, grants, p_type, corrections):
         with self.session_maker() as db_session:
-            # aaa = session.query(Temp).filter(
-            #     Temp.pmId == Detail.Article_pmid).all()
             db_session.bulk_save_objects(detail)
             db_session.bulk_save_objects(author)
             db_session.bulk_save_objects(keyword)
@@ -545,7 +511,8 @@ class Pubmed:
                     p_type_list,
                     corrections_list,
                     # reference_list,
-                ) = self.parse_item(item)
+                ) = self.parse_item(
+                    item)  # todo --> 最开始写入temp表 check 判断该条记录是否存在于重复, 重复的生成dup表的对象 并从原本对象列表删除
                 if detail_obj:
                     detail_data.append(detail_obj)
                 if author_list:
