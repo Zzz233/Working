@@ -66,7 +66,7 @@ class Wechat:
         }
 
     def get_url(self):
-        for i in range(500, 1715, 5):
+        for i in range(1710, 1715, 5):
             url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA3MzQyNjY1MQ==&type=9&query=&token=108424269&lang=zh_CN&f=json&ajax=1'
             yield url
 

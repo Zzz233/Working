@@ -2,6 +2,6 @@
     "python.linting.pylintEnabled": true,
     "python.linting.flake8Enabled": false,
     "python.linting.enabled": true,
-    "python.pythonPath": "/Users/zhou/.local/share/virtualenvs/new_work-UItSFzDf/bin/python",
+    "python.pythonPath": "new_venv\\Scripts\\python.exe",
     "python.formatting.provider": "yapf"
 }

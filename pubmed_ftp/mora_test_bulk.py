@@ -6,6 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 import redis
 import time
+from contextlib import contextmanager
 
 Base = declarative_base()
 
@@ -518,32 +519,71 @@ class Pubmed:
             # reference_results,
         )
 
-    def insert(self, detail, author, keyword, grants, p_type,
-               corrections):  # reference
-        time_start = time.time()
-        session.bulk_save_objects(detail)
-        session.bulk_save_objects(author)
-        session.bulk_save_objects(keyword)
-        session.bulk_save_objects(grants)
-        session.bulk_save_objects(p_type)
-        session.bulk_save_objects(corrections)
-        # session.bulk_save_objects(reference)
+    # def insert(self, detail, author, keyword, grants, p_type,
+    #            corrections,dbSession):  # reference
+    #     session = dbSession
+    #     time_start = time.time()
+    #     session.bulk_save_objects(detail)
+    #     session.bulk_save_objects(author)
+    #     session.bulk_save_objects(keyword)
+    #     session.bulk_save_objects(grants)
+    #     session.bulk_save_objects(p_type)
+    #     session.bulk_save_objects(corrections)
+    #     # session.bulk_save_objects(reference)
+    #     try:
+    #         session.commit()
+    #         print("done")
+    #         flag = 1
+    #         session.close()
+    #     except Exception as e:
+    #         session.rollback()
+    #         print(e)
+    #         flag = 2
+    #         session.close()
+    #         pass
+    #     time_end = time.time()
+    #     print("insert cost", (time_end - time_start) / 60)
+    #     return flag
+    @contextmanager
+    def session_maker(self, session=session,path):
         try:
+            yield session
             session.commit()
-            print("done")
-            session.close()
-        except Exception as e:
+        except:
             session.rollback()
-            print(e)
+            r.rpush("task_error_new", path)
+            print("error push")
+            raise
+        finally:
             session.close()
-        time_end = time.time()
-        print("insert cost", (time_end - time_start) / 60)
+
+    def add_data(self):
+        with self.session_maker() as db_session:
+            # db_session.query(Users).filter_by(name='test2').update({'email': 'test2@qq.com'})
+            db_session.bulk_save_objects(detail)
+            db_session.bulk_save_objects(author)
+            db_session.bulk_save_objects(keyword)
+            db_session.bulk_save_objects(grants)
+            db_session.bulk_save_objects(p_type)
+            db_session.bulk_save_objects(corrections)
 
     def push_back(self, path):
         r.rpush("task_error_new", path)
         print("error push")
 
     def run(self):
+        # MySql
+        engine = create_engine(
+            "mysql+pymysql://root:app1234@192.168.124.2:3306/pubmed_article?charset=utf8mb4"
+        )
+        DBSession = sessionmaker(bind=engine)
+        session = DBSession()
+        # Redis
+        pool = redis.ConnectionPool(host="localhost",
+                                    port=6379,
+                                    decode_responses=True,
+                                    db=0)
+        r = redis.Redis(connection_pool=pool)
         for path in self.get_path():
             print(path)
             detail_data = []
@@ -581,22 +621,22 @@ class Pubmed:
                 #     reference_data.extend(reference_list)
             time_end = time.time()
             print("parse cost", (time_end - time_start) / 60)
-            try:
-                self.insert(
-                    detail_data,
-                    author_data,
-                    keyword_data,
-                    grants_data,
-                    p_type_data,
-                    corrections_data,
-                    # reference_data,
-                )
-            except Exception as e:
-                self.push_back(path)
-                print(e)
-                # continue
-                break
-
+            # try:
+            # flag = self.insert(
+            #     detail_data,
+            #     author_data,
+            #     keyword_data,
+            #     grants_data,
+            #     p_type_data,
+            #     corrections_data,
+            #     # reference_data,
+            #     DBSession()
+            # )
+            # if flag != 1:
+            #     self.push_back(path)
+            #     # continue
+            #     break
+            self.add_data()
 
 if __name__ == "__main__":
     pubmed = Pubmed()
