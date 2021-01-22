@@ -57,14 +57,14 @@ session = DBSession()
 #     exists().where(Temp.pmId == Detail.Article_pmid)
 # ).scalar()
 
-aaa = session.query(Temp).filter(
+aaa = session.query(Temp.pmId).filter(
     Temp.pmId == Detail.Article_pmid).all()
-b = aaa[0].pmId
-print(b)
-session.query(Temp).delete(
-    synchronize_session='evaluate')
-aaa = session.query(Temp).filter(
-    Temp.pmId == Detail.Article_pmid).all()
+
 print(aaa)
+# session.query(Temp).delete(
+#     synchronize_session='evaluate')
+# aaa = session.query(Temp).filter(
+#     Temp.pmId == Detail.Article_pmid).all()
+# print(aaa)
 session.commit()
 session.close()

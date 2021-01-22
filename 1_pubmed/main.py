@@ -87,7 +87,7 @@ class Corrections(Base):
 
 class Temp(Base):
     __tablename__ = "Temp_PMId"
-    
+
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     pmId = Column(Integer, nullable=True, comment="")
     xmlname = Column(String(40), nullable=True, comment="")
@@ -512,7 +512,12 @@ class Pubmed:
                     corrections_list,
                     # reference_list,
                 ) = self.parse_item(
-                    item)  # todo --> 最开始写入temp表 check 判断该条记录是否存在于重复, 重复的生成dup表的对象 并从原本对象列表删除
+                    item)
+                # todo --> 最开始写入temp表 check 判断pmid是否为重复
+                #  获得重复结果的pmid列表
+                #  重复：从所有表的对象列表中移除该pmid记录
+                #       并且生成dup表的相应对象
+                #  不重复：~~~
                 if detail_obj:
                     detail_data.append(detail_obj)
                 if author_list:

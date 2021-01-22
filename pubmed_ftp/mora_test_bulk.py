@@ -89,6 +89,7 @@ class Reference(Base):
 
 class Publication(Base):
     __tablename__ = "Publication_type"
+    
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Article_pmid = Column(Integer, nullable=True, comment="")
     Article_type = Column(String(200), nullable=True, comment="")
