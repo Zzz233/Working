@@ -43,7 +43,6 @@ class DetailDup(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     PMID_version = Column(String(50), nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
     Date_revised = Column(String(20), nullable=True, comment="")
     Journal_title = Column(String(200), nullable=True, comment="")
     Journal_ISSN_print = Column(String(40), nullable=True, comment="")
@@ -71,7 +70,7 @@ class Keyword(Base):
     __tablename__ = "Article_keyword"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(Integer, nullable=True, comment="")
+    Article_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
     Key_word = Column(String(200), nullable=True, comment="")
 
 
@@ -79,8 +78,7 @@ class KeywordDup(Base):
     __tablename__ = "Article_keyword_dup"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Article_pmid = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
+    Article_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
     Key_word = Column(String(200), nullable=True, comment="")
 
 
@@ -100,7 +98,6 @@ class InfoDup(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Article_pmid = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
     LastName = Column(String(100), nullable=True, comment="")
     ForeName = Column(String(100), nullable=True, comment="")
     Initials = Column(String(10), nullable=True, comment="")
@@ -123,7 +120,6 @@ class GrantDup(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Article_pmid = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
     Grant_id = Column(String(200), nullable=True, comment="")
     Grant_agency = Column(String(2000), nullable=True, comment="")
     Grant_agency_acronym = Column(String(200), nullable=True, comment="")
@@ -143,7 +139,6 @@ class PublicationDup(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Article_pmid = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
     Article_type = Column(String(200), nullable=True, comment="")
 
 
@@ -161,7 +156,6 @@ class CorrectionsDup(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     Article_pmid = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
     Article_reftype = Column(String(200), nullable=True, comment="")
     comments_corrections_pmid = Column(String(20), nullable=True, comment="")
 
@@ -170,7 +164,6 @@ class Temp(Base):
     __tablename__ = "Temp_PMId"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    version = Column(Integer, nullable=True, comment="")
     pmId = Column(Integer, nullable=True, comment="")
     xmlname = Column(String(40), nullable=True, comment="")
 
@@ -209,8 +202,8 @@ class Pubmed:
         self.base_path = "C:/Pubmed/baseline/"
 
     def get_path(self):
-        while r.exists("xml_task"):
-            path = self.base_path + r.lpop("xml_task")
+        while r.exists("task_error_new"):
+            path = r.lpop("task_error_new")
             # r.rpush('task_error_new', path)
             yield path
 
@@ -226,8 +219,6 @@ class Pubmed:
             yield item
 
     def parse_item(self, item, path):
-        # todo version
-        version = int(item.xpath('./MedlineCitation/PMID[@Version]/@Version')[0].strip())
         # ! article_pmid
         # todo Article_pmid
         try:
@@ -242,12 +233,12 @@ class Pubmed:
         )
         keyword_results = []
         keyword_results_2 = []
-        for keywords in keywordList:
+        for inno_id, keywords in enumerate(keywordList):
             try:
                 key_word = keywords.xpath("./text()")[0].strip()[0:200]
-                new_keyword = KeywordDup(Article_pmid=article_pmid,
-                                         version=version,
-                                         Key_word=key_word)
+                new_keyword = Keyword(Article_pmid=article_pmid,
+                                      Key_word=key_word,
+                                      id=inno_id)
                 keyword_results_2.append(key_word)
                 keyword_results.append(new_keyword)
             except Exception:
@@ -263,9 +254,8 @@ class Pubmed:
         for pType_item in publicationTypeList:
             try:
                 pType = pType_item.xpath("./text()")[0].strip()
-                new_pType = PublicationDup(Article_pmid=article_pmid,
-                                           version=version,
-                                           Article_type=pType)
+                new_pType = Publication(Article_pmid=article_pmid,
+                                        Article_type=pType)
                 pTypeList_2.append(pType)
                 pType_results.append(new_pType)
             except Exception:
@@ -289,9 +279,8 @@ class Pubmed:
             if refType is None:
                 pass
             else:
-                new_corrections = CorrectionsDup(
+                new_corrections = Corrections(
                     Article_pmid=article_pmid,
-                    version=version,
                     Article_reftype=refType,
                     comments_corrections_pmid=corrections_pmid,
                 )
@@ -299,10 +288,9 @@ class Pubmed:
                 correctionsList_results.append(new_corrections)
 
         # ? pubmed_article_detail 表
-
         # todo PMID_version
         pmid_version_text = item.xpath(
-            './MedlineCitation/PMID[@Version]/text()')
+            './MedlineCitation/PMID[@Version="1"]/text()')
         pmid_version = ",".join(i for i in pmid_version_text)
         if len(pmid_version) == 0:
             pmid_version = "Error"
@@ -438,8 +426,7 @@ class Pubmed:
         except Exception:
             article_language = None
 
-        new_detail = DetailDup(
-            version=version,
+        new_detail = Detail(
             PMID_version=pmid_version,
             Date_revised=date_revised,
             Journal_title=journal_title,
@@ -461,7 +448,6 @@ class Pubmed:
             Article_type=article_type,
             Article_reftype=d_refType,
             Article_language=article_language,
-            xmlName=path
         )
         # session.add(new_detail)
 
@@ -494,9 +480,8 @@ class Pubmed:
                     and affiliation is None):
                 pass
             else:
-                new_info = InfoDup(
+                new_info = Info(
                     Article_pmid=article_pmid,
-                    version=version,
                     LastName=lastName,
                     ForeName=foreName,
                     Initials=initials,
@@ -524,9 +509,8 @@ class Pubmed:
                 grantCountry = grant.xpath("./Country/text()")[0].strip()
             except Exception:
                 grantCountry = None
-            new_grant = GrantDup(
+            new_grant = Grant(
                 Article_pmid=article_pmid,
-                version=version,
                 Grant_id=grandId,
                 Grant_agency=grandAgency,
                 Grant_agency_acronym=grandAgencyAcronym,
@@ -538,7 +522,6 @@ class Pubmed:
         # temp_results = []
         new_temp = Temp(
             pmId=article_pmid,
-            version=version,
             xmlname=path
         )
         # temp_results.append(new_temp)
@@ -553,171 +536,108 @@ class Pubmed:
             correctionsList_results,
         )
 
-    # temp预先去重
-    def pre_removal(self, temp_list):
-        temp_dict = {}
-        temp_results = []
-        for item_1 in temp_list:
-            t_key = str(item_1.pmId)
-            t_value = str(item_1.version)
-            if t_key not in temp_dict:
-                temp_dict[t_key] = t_value
-            elif t_key in temp_dict:
-                if temp_dict[t_key] < t_value:
-                    temp_dict[t_key] = t_value
-        for item_2 in temp_list:
-            tt_key = str(item_2.pmId)
-            tt_value = str(item_2.version)
-            if tt_key in temp_dict.keys() and tt_value == temp_dict[tt_key]:
-                temp_results.append(item_2)
-        return temp_results
-
-    # temp预先去重
-    def pre_removal_2(self, temp_list):
-        temp_dict = {}
-        temp_results = []
-        for item_1 in temp_list:
-            t_key = str(item_1.Article_pmid)
-            t_value = str(item_1.version)
-            if t_key not in temp_dict:
-                temp_dict[t_key] = t_value
-            elif t_key in temp_dict:
-                if temp_dict[t_key] < t_value:
-                    temp_dict[t_key] = t_value
-        for item_2 in temp_list:
-            tt_key = str(item_2.Article_pmid)
-            tt_value = str(item_2.version)
-            if tt_key in temp_dict.keys() and tt_value == temp_dict[tt_key]:
-                temp_results.append(item_2)
-        return temp_results
-
     @contextmanager
     def session_maker(self, session=session):
         try:
             yield session
             session.commit()
+            flag = 1
         except:
             session.rollback()
+            flag = 2
             raise
         finally:
             session.close()
+        return flag
 
     def insert_to_temp(self, temp_objs):
         duplicated_list = []
         with self.session_maker() as db_session:
             db_session.query(Temp).delete(synchronize_session='evaluate')
             db_session.bulk_save_objects(temp_objs)
-            print('临时表已经写入' + '\n' + '==========')
+            print('临时表已经写入')
             duplicated = session.query(Temp.pmId).filter(
                 Temp.pmId == Detail.Article_pmid).all()
             for i in duplicated:
                 duplicated_list.append(i[0])
             if len(duplicated_list) == 0:
-                print('莫得重复' + '\n' + '==========')
+                print('莫得重复')
             elif len(duplicated_list) > 0:
-                print('有重复' + '\n' + '==========')
+                print('有重复')
         return duplicated_list
 
-    def classification(self, dup_list, detail, author, keyword, grants, p_type,
-                       corrections):  # 分类 接收原有对象 重新生成各个表的对象
+    def classification(self, path, dup_list, detail, author, keyword, grants, p_type, corrections):  # 分类 接收原有对象 重新生成各个表的对象
         # todo 收到重复的pmid号列表 遍历每个表
         detail_dup = []
         detail_ori = []
         for d_item in detail:
             if d_item.Article_pmid in dup_list:
-                detail_dup.append(d_item)
-            elif d_item.Article_pmid not in dup_list:
-                new_detail = Detail(
-                    PMID_version=d_item.PMID_version,
-                    Date_revised=d_item.Date_revised,
-                    Journal_title=d_item.Journal_title,
-                    Journal_ISSN_print=d_item.Journal_ISSN_print,
-                    Journal_ISSN_electronic=d_item.Journal_ISSN_electronic,
-                    Journal_ISSN_link=d_item.Journal_ISSN_link,
-                    Journal_vol=d_item.Journal_vol,
-                    Journal_issue=d_item.Journal_issue,
-                    Journal_abbreviation=d_item.Journal_abbreviation,
-                    Journal_UniqueID=d_item.Journal_UniqueID,
-                    Article_title=d_item.Article_title,
-                    Pub_date=d_item.Pub_date,
-                    Article_pmid=d_item.Article_pmid,
-                    Article_pii=d_item.Article_pii,
-                    Article_doi=d_item.Article_doi,
-                    Article_pmc=d_item.Article_pmc,
-                    Article_abstract=d_item.Article_abstract,
-                    Article_keyword=d_item.Article_keyword,
-                    Article_type=d_item.Article_type,
-                    Article_reftype=d_item.Article_reftype,
-                    Article_language=d_item.Article_language,
-                )
-                detail_ori.append(new_detail)
+                new_detail = DetailDup(PMID_version=d_item.pmid_version,
+                                       Date_revised=d_item.date_revised,
+                                       Journal_title=d_item.journal_title,
+                                       Journal_ISSN_print=d_item.journal_issn_print,
+                                       Journal_ISSN_electronic=d_item.journal_issn_electronic,
+                                       Journal_ISSN_link=d_item.journal_issn_link,
+                                       Journal_vol=d_item.journal_vol,
+                                       Journal_issue=d_item.journal_issue,
+                                       Journal_abbreviation=d_item.journal_abbreviation,
+                                       Journal_UniqueID=d_item.journal_uniqueid,
+                                       Article_title=d_item.article_title,
+                                       Pub_date=d_item.pub_date,
+                                       Article_pmid=d_item.article_pmid,
+                                       Article_pii=d_item.article_pii,
+                                       Article_doi=d_item.article_doi,
+                                       Article_pmc=d_item.article_pmc,
+                                       Article_abstract=d_item.abstract,
+                                       Article_keyword=d_item.kwd,
+                                       Article_type=d_item.article_type,
+                                       Article_reftype=d_item.d_refType,
+                                       Article_language=d_item.article_language,
+                                       xmlname=path)
+                detail_dup.append(new_detail)
+                pass
+            else:
+                detail_ori.append(d_item)
 
         author_dup = []
         author_ori = []
         for a_item in author:
             if a_item.Article_pmid in dup_list:
                 author_dup.append(a_item)
-            elif a_item.Article_pmid not in dup_list:
-                new_author = Info(
-                    Article_pmid=a_item.Article_pmid,
-                    LastName=a_item.LastName,
-                    ForeName=a_item.ForeName,
-                    Initials=a_item.Initials,
-                    Affiliation=a_item.Affiliation,
-                )
-                author_ori.append(new_author)
+            else:
+                author_ori.append(a_item)
 
         keyword_dup = []
         keyword_ori = []
         for k_item in keyword:
             if k_item.Article_pmid in dup_list:
                 keyword_dup.append(k_item)
-            elif k_item.Article_pmid not in dup_list:
-                new_keyword = Keyword(
-                    Article_pmid=k_item.Article_pmid,
-                    Key_word=k_item.Key_word,
-                )
-                keyword_ori.append(new_keyword)
+            else:
+                keyword_ori.append(k_item)
 
         grants_dup = []
         grants_ori = []
         for o_item in grants:
             if o_item.Article_pmid in dup_list:
                 grants_dup.append(o_item)
-            elif o_item.Article_pmid not in dup_list:
-                new_grants = Grant(
-                    Article_pmid=o_item.Article_pmid,
-                    Grant_id=o_item.Grant_id,
-                    Grant_agency=o_item.Grant_agency,
-                    Grant_agency_acronym=o_item.Grant_agency_acronym,
-                    Grant_country=o_item.Grant_country,
-                )
-                grants_ori.append(new_grants)
+            else:
+                grants_ori.append(o_item)
 
         p_type_dup = []
         p_type_ori = []
         for p_item in p_type:
             if p_item.Article_pmid in dup_list:
                 p_type_dup.append(p_item)
-            elif p_item.Article_pmid not in dup_list:
-                new_p = Publication(
-                    Article_pmid=p_item.Article_pmid,
-                    Article_type=p_item.Article_type,
-                )
-                p_type_ori.append(new_p)
+            else:
+                p_type_ori.append(p_item)
 
         corrections_dup = []
         corrections_ori = []
         for c_item in corrections:
             if c_item.Article_pmid in dup_list:
                 corrections_dup.append(c_item)
-            elif c_item.Article_pmid not in dup_list:
-                new_c = Corrections(
-                    Article_pmid=c_item.Article_pmid,
-                    Article_reftype=c_item.Article_reftype,
-                    comments_corrections_pmid=c_item.comments_corrections_pmid,
-                )
-                corrections_ori.append(new_c)
+            else:
+                corrections_ori.append(c_item)
 
         return (detail_dup, detail_ori,
                 author_dup, author_ori,
@@ -743,7 +663,7 @@ class Pubmed:
             db_session.bulk_save_objects(p_type_dup)
             db_session.bulk_save_objects(corrections_ori)
             db_session.bulk_save_objects(corrections_dup)
-            print('全部写入' + '\n' + '==========')
+            print('全部写入')
 
     def push_back(self, path):
         r.rpush("task_error_new", path)
@@ -784,33 +704,24 @@ class Pubmed:
                     p_type_data.extend(p_type_list)
                 if corrections_list:
                     corrections_data.extend(corrections_list)
-            final_temp_data = self.pre_removal(temp_data)
-            final_detail_data = self.pre_removal_2(detail_data)
-            final_author_data = self.pre_removal_2(author_data)
-            final_keyword_data = self.pre_removal_2(keyword_data)
-            final_grants_data = self.pre_removal_2(grants_data)
-            final_p_type_data = self.pre_removal_2(p_type_data)
-            final_corrections_data = self.pre_removal_2(corrections_data)
-            # todo 在写入临时表之前处理 去重 保留最大version记录
-            dup_show = self.insert_to_temp(final_temp_data)
-            print(dup_show)
+            dup_show = self.insert_to_temp(temp_data)
             (detail_dup, detail_ori,
              author_dup, author_ori,
              keyword_dup, keyword_ori,
              grants_dup, grants_ori,
              p_type_dup, p_type_ori,
              corrections_dup, corrections_ori
-             ) = self.classification(dup_show,
-                                     final_detail_data, final_author_data,
-                                     final_keyword_data, final_grants_data,
-                                     final_p_type_data, final_corrections_data)
+             ) = self.classification(path, dup_show,
+                                     detail_data, author_data,
+                                     keyword_data, grants_data,
+                                     p_type_data, corrections_data)
             self.add_data(detail_dup, detail_ori,
                           author_dup, author_ori,
                           keyword_dup, keyword_ori,
                           grants_dup, grants_ori,
                           p_type_dup, p_type_ori,
                           corrections_dup, corrections_ori)
-            print('单次循环结束' + '\n' + '==========')
+            print('恭喜')
             break
 
 

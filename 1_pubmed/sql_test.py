@@ -43,7 +43,8 @@ class Temp(Base):
     __tablename__ = "Temp_PMId"
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     pmId = Column(Integer, nullable=True, comment="")
-    xmlname = Column(String(40), nullable=True, comment="")
+    version = Column(Integer, nullable=True, comment="")
+    xmlName = Column(String(40), nullable=True, comment="")
 
 
 # MySql
@@ -56,11 +57,16 @@ session = DBSession()
 # it_exists = session.query(
 #     exists().where(Temp.pmId == Detail.Article_pmid)
 # ).scalar()
-
-aaa = session.query(Temp.pmId).filter(
-    Temp.pmId == Detail.Article_pmid).all()
-
-print(aaa)
+list_a = []
+# aaa = session.query(Temp).filter(
+#     Temp.id == 960965).all()
+# for i in aaa:
+#     print(i.id)
+#     print(i.version)
+#     print(i.xmlName)
+#     del i.id
+#     print(i.id)
+# print(list_a)
 # session.query(Temp).delete(
 #     synchronize_session='evaluate')
 # aaa = session.query(Temp).filter(

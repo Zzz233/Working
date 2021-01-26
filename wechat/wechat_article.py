@@ -68,13 +68,15 @@ while r.exists('wechat_url'):
     url = r.rpop('wechat_url')
     print(url)
     with requests.session() as s:
-        resp = s.get(url = url)
+        resp = s.get(url=url)
         html = etree.HTML(resp.text)
         contents = html.xpath('//div[@class="rich_media_content "][@id="js_content"]')[0]
         name1 = etree.tostring(contents, method='html')
-        name2 = HTMLParser().unescape(name1.decode()).split(r'<div class="rich_media_content " id="js_content" style="visibility: hidden;">')[-1].strip().rstrip('</div>').strip()
-        # print(name2)
-        data_info = session.query(Data).filter(Data.Link==url).first()
+        name2 = HTMLParser().unescape(name1.decode()).split(
+            r'<div class="rich_media_content " id="js_content" style="visibility: hidden;">')[-1].strip().rstrip(
+            '</div>').strip()
+        print(name2)
+        data_info = session.query(Data).filter(Data.Link == url).first()
         print(data_info)
         data_info.content = name2
         session.commit()
