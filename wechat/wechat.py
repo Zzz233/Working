@@ -7,8 +7,8 @@ import requests
 import redis
 import time
 import random
+from contextlib import contextmanager
 
-company = 'BioArt'
 
 Base = declarative_base()
 
@@ -33,7 +33,7 @@ class Data(Base):
 
 # MySql
 engine = create_engine(
-    "mysql+pymysql://root:app1234@192.168.124.10:3306/biology_grant?charset=utf8mb4"
+    "mysql+pymysql://biopick:bp@2019@123.56.59.48:3306/qdm765045126_db?charset=utf8mb4"
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -45,32 +45,44 @@ pool = redis.ConnectionPool(host="localhost",
 r = redis.Redis(connection_pool=pool)
 
 
+company = '阜呐核酸情报站'
+
+
 class Wechat:
     def __init__(self):
         self.headers = {
             'Host': 'mp.weixin.qq.com',
-            'User-Agent':
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:82.0) Gecko/20100101 Firefox/82.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0',
             'Accept': '*/*',
-            'Accept-Language':
-            'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
+            'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
-            'Referer':
-            'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=108424269&lang=zh_CN',
-            'Cookie':
-            'ua_id=NqRMQzT37VpJKMncAAAAAJtRaYelsoLj6YyXUadzuQ0=; uuid=6c34f914d18ece28bd47a5d9d24dc291; cert=ZZL_aMSKHPWeiI9w7H_Y1HN471XZTat3; rand_info=CAESIJ8epP/XFSJZRbd9rxbAc/s3CUYXe0Hy+22ethkIc7iw; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=FP0+te4Y9WY8gw0nlL+PPiESOM+tJKdZS9C0RDFuFZUJMwsQfSbTcjLg2d/IBO/E; slave_sid=RmRjX2xQelg1SndaZjByUGp2a2V2aGtCdExSczJNYTFjRnNzTm1sT2hmYVBrTUlIM1p0NmxTWnFPRndWQ0prVUFrcU4yRDNEWWdQTFJXQXBoZTI4NURlWDBjcEYzS0FnWmVONm9MSHk0YWVvNlNoSVFwcmlrdkVWSWEyS2doNXJ1S2pRbkpTQ1pEN1ZvQXh3; slave_user=gh_c1f740f2ddf6; xid=60afca852ed1a09b2ee3d9275b6ce515; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN; rewardsn=; wxtokenkey=777',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=1381148804&lang=zh_CN',
+            'Cookie': 'ua_id=E5gv7Z2f95VXOrhmAAAAACAkPgNGjwPCozTGj1NPZfg=; uuid=1e08d7a62e5ae03b0e7b42264515b663; xid=2acf4b893908e32e5fef5fbb25b329d8; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN; rand_info=CAESIMMuWOakgg6EVR/BXCzz1L/HZLV7E0t96aKQy7zeym+I; slave_bizuin=3276978245; data_bizuin=3276978245; bizuin=3276978245; data_ticket=T3twG/uDFHLAj3y7xvteZfYPYxYc+JJwm34N2KnO3zUyO0ElDYBl1dezsusapsV3; slave_sid=X0hMUlRsQTBnREZoWTRmcVVjVXJCcWduSDVlbEZNN0JjcG9fS3NvblJ1azdNb0ozV0tZbjJBUE9ZYnloWTZqMVlLVDJBMWxTV1dhVzhfV21UQndwZ1lfa0s0SzFiQXdSaGJ6Qlp1WkxvZ2NfY29DZlpjMWJFbjVLbnA5dm9tenM1R0VBdFB0N0lzTkxwMzJK; slave_user=gh_2dcc445c6278; openid2ticket_oRbhSwxvnpgBizeeWXAgSS58f2fk=',
             'Pragma': 'no-cache',
             'Cache-Control': 'no-cache',
+            'TE': 'Trailers',
         }
+        # self.data = {
+        #     "action": "list_ex",
+        #     "begin": number,
+        #     "count": "5",
+        #     "fakeid": yourfakeid,
+        #     "type": "9",
+        #     "token": yourtoken,
+        #     "lang": "zh_CN",
+        #     "f": "json",
+        #     "ajax": "1",
+        #     "query": "",
+        # }
 
     def get_url(self):
-        for i in range(1710, 1715, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA3MzQyNjY1MQ==&type=9&query=&token=108424269&lang=zh_CN&f=json&ajax=1'
+        for i in range(135, 330, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=Mzg4MzEzMzczMA==&type=9&query=&token=1381148804&lang=zh_CN&f=json&ajax=1'
             yield url
 
-    def get_list_page(self, url):
+    def get_list_page(self, url):  #  , proxy
         with requests.session() as s:
             json_data = s.get(url=url, headers=self.headers, timeout=30).json()
         return json_data
@@ -82,11 +94,11 @@ class Wechat:
             for item in results:
                 # id
                 # appmsgid = item['appmsgid']
-                digest = item['digest']
+                digest = item['digest'].strip()
                 # author
-                title = item['title']
-                link = item['link']
-                cover_img = item['cover']
+                title = item['title'].strip()
+                link = item['link'].strip()
+                cover_img = item['cover'].strip()
                 create_time = time.strftime(
                     '%Y-%m-%d %H:%M:%S', (time.localtime(item['create_time'])))
                 update_time = time.strftime(
@@ -108,17 +120,22 @@ class Wechat:
             print(json_data['base_resp']['err_msg'])
             return 'not ok'
 
-    def insert(self, results):
+    @contextmanager
+    def session_maker(self, session=session):
         try:
-            session.bulk_save_objects(results)
+            yield session
             session.commit()
-            flag = 1
-        except Exception as e:
+        except:
             session.rollback()
-            print(e)
-            flag = 2
+            raise
         finally:
             session.close()
+
+    def insert(self, results):
+        with self.session_maker() as db_session:
+            db_session.bulk_save_objects(results)
+            db_session.commit()
+            flag = 1
         return flag
 
     def error_push(self, item):
@@ -135,8 +152,10 @@ class Wechat:
         return proxies
 
     def run(self):
+        # proxy = self.get_proxy()
         for url in self.get_url():
             print(url)
+            # print(proxy)
             json_obj = self.get_list_page(url)
             data_objs = self.parse_json(json_obj)
             if data_objs == 'not ok':
@@ -145,10 +164,11 @@ class Wechat:
             flag = self.insert(data_objs)
             if flag == 1:
                 print('done')
-            elif flag == 2:
+            elif flag != 2:
                 self.error_push(url)
+                # proxy = self.get_proxy()
                 break
-            time.sleep(random.uniform(60, 90))
+            time.sleep(random.uniform(30, 60))
 
 
 if __name__ == "__main__":

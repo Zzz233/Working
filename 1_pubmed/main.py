@@ -227,7 +227,8 @@ class Pubmed:
 
     def parse_item(self, item, path):
         # todo version
-        version = int(item.xpath('./MedlineCitation/PMID[@Version]/@Version')[0].strip())
+        version = int(
+            item.xpath('./MedlineCitation/PMID[@Version]/@Version')[0].strip())
         # ! article_pmid
         # todo Article_pmid
         try:
@@ -347,7 +348,7 @@ class Pubmed:
         # todo Journal_abbreviation
         try:
             journal_abbreviation = item.xpath(
-                ".//ISOAbbreviation/text()")[0].strip()
+                ".//ISOAbbreviation/text()")[0].strip()[0:100]
         except Exception:
             journal_abbreviation = None
         # todo Journal_UniqueID
@@ -358,7 +359,7 @@ class Pubmed:
         # todo Article_title
         try:
             article_title_text = item.xpath(".//ArticleTitle//text()")
-            article_title = "".join(i for i in article_title_text)
+            article_title = "".join(i for i in article_title_text)[0:2000]
             if len(article_title) == 0:
                 vernacular_text = item.xpath(".//VernacularTitle//text()")
                 article_title = " ".join(v for v in vernacular_text)
@@ -509,7 +510,7 @@ class Pubmed:
         grants_results = []
         for grant in grants:
             try:
-                grandId = grant.xpath("./GrantID/text()")[0].strip()
+                grandId = grant.xpath("./GrantID/text()")[0].strip()[0:500]
             except Exception:
                 grandId = None
             try:
@@ -811,7 +812,7 @@ class Pubmed:
                           p_type_dup, p_type_ori,
                           corrections_dup, corrections_ori)
             print('单次循环结束' + '\n' + '==========')
-            break
+            # break
 
 
 if __name__ == "__main__":

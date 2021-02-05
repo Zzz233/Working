@@ -12,44 +12,19 @@ import time
 Base = declarative_base()
 
 
-class Detail(Base):
-    __tablename__ = "pubmed_article_detail"
+class Reference(Base):
+    __tablename__ = "Article_reference"
 
-    # id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    PMID_version = Column(String(50), nullable=True, comment="")
-    Date_revised = Column(String(20), nullable=True, comment="")
-    Journal_title = Column(String(200), nullable=True, comment="")
-    Journal_ISSN_print = Column(String(40), nullable=True, comment="")
-    Journal_ISSN_electronic = Column(String(40), nullable=True, comment="")
-    Journal_ISSN_link = Column(String(40), nullable=True, comment="")
-    Journal_vol = Column(String(20), nullable=True, comment="")
-    Journal_issue = Column(String(20), nullable=True, comment="")
-    Journal_abbreviation = Column(String(50), nullable=True, comment="")
-    Journal_UniqueID = Column(String(50), nullable=True, comment="")
-    Article_title = Column(String(2000), nullable=True, comment="")
-    Pub_date = Column(String(20), nullable=True, comment="")
-    Article_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
-    Article_pii = Column(String(50), nullable=True, comment="")
-    Article_doi = Column(String(50), nullable=True, comment="")
-    Article_pmc = Column(String(50), nullable=True, comment="")
-    Article_abstract = Column(Text, nullable=True, comment="")
-    Article_keyword = Column(String(2000), nullable=True, comment="")
-    Article_type = Column(String(200), nullable=True, comment="")
-    Article_reftype = Column(String(200), nullable=True, comment="")
-    Article_language = Column(String(10), nullable=True, comment="")
+    pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
+    cited_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
 
 
-class Temp(Base):
-    __tablename__ = "Temp_PMId"
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    pmId = Column(Integer, nullable=True, comment="")
-    version = Column(Integer, nullable=True, comment="")
-    xmlName = Column(String(40), nullable=True, comment="")
+
 
 
 # MySql
 engine = create_engine(
-    "mysql+pymysql://root:app1234@192.168.124.2:3306/pubmed_article?charset=utf8mb4"
+    "mysql+pymysql://root:app1234@192.168.124.10:3306/pubmed_article?charset=utf8mb4"
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -57,7 +32,7 @@ session = DBSession()
 # it_exists = session.query(
 #     exists().where(Temp.pmId == Detail.Article_pmid)
 # ).scalar()
-list_a = []
+# list_a = []
 # aaa = session.query(Temp).filter(
 #     Temp.id == 960965).all()
 # for i in aaa:
@@ -72,5 +47,20 @@ list_a = []
 # aaa = session.query(Temp).filter(
 #     Temp.pmId == Detail.Article_pmid).all()
 # print(aaa)
+temp_1 = Reference(pmid=1, cited_pmid=2)
+# temp_2 = Reference(pmid=1, cited_pmid=2)
+# if temp_1 == temp_2:
+#     print(1)
+# else:
+#     print(2)
+# Below will return True or False
+query = session.query(Reference).filter(
+    temp_1
+)
+print(query)
+
 session.commit()
 session.close()
+
+
+# 获取3W条后比对pmid和version号 去重
