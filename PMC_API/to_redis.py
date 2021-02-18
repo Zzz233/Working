@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, Text, DateTime, Index
+from sqlalchemy import Column, Integer, String, Text, DateTime, Index, JSON
 from sqlalchemy import String, create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
@@ -24,6 +24,20 @@ class Data(Base):
     # article_status = Column(String(5), nullable=True, comment="0 未爬取 1爬取成功 2不存在")
 
 
+class Journal(Base):
+    __tablename__ = "journal"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
+    Abbr_Pubmed = Column(String(70), nullable=True, comment="")
+    ISSN = Column(String(40), nullable=True, comment="")
+    Abbr = Column(String(200), nullable=True, comment="")
+    IPinfo = Column(JSON, nullable=True, comment="")
+    impact_factor = Column(String(20), nullable=True, comment="")
+    journal_name = Column(String(500), nullable=True, comment="")
+
+
+
+
 engine = create_engine(
     "mysql+pymysql://root:app1234@192.168.124.2:3306/pubmed_article?charset=utf8"
 )
@@ -33,7 +47,7 @@ session = DBSession()
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=14)
 r = redis.Redis(connection_pool=pool)
 
-task_list = session.query(Data).filter(Data.journal_name=='J Clin Oncol').all()
+task_list = session.query(Data).filter(Data.issn == '0028-0836').all()
 # task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
 for i in task_list:
     issn = i.issn
@@ -42,7 +56,7 @@ for i in task_list:
     pmid = i.pmid
     article_type = i.article_type
     item = ','.join((pmid, pmcid, issn, journal_name, article_type))
-    r.rpush("half", item)
+    r.rpush("half_1", item)
     print(item)
 
 pool.disconnect()

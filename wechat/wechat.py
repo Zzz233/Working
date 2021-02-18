@@ -45,7 +45,7 @@ pool = redis.ConnectionPool(host="localhost",
 r = redis.Redis(connection_pool=pool)
 
 
-company = '阜呐核酸情报站'
+company = '基迪奥生物'
 
 
 class Wechat:
@@ -58,8 +58,8 @@ class Wechat:
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
-            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=1381148804&lang=zh_CN',
-            'Cookie': 'ua_id=E5gv7Z2f95VXOrhmAAAAACAkPgNGjwPCozTGj1NPZfg=; uuid=1e08d7a62e5ae03b0e7b42264515b663; xid=2acf4b893908e32e5fef5fbb25b329d8; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN; rand_info=CAESIMMuWOakgg6EVR/BXCzz1L/HZLV7E0t96aKQy7zeym+I; slave_bizuin=3276978245; data_bizuin=3276978245; bizuin=3276978245; data_ticket=T3twG/uDFHLAj3y7xvteZfYPYxYc+JJwm34N2KnO3zUyO0ElDYBl1dezsusapsV3; slave_sid=X0hMUlRsQTBnREZoWTRmcVVjVXJCcWduSDVlbEZNN0JjcG9fS3NvblJ1azdNb0ozV0tZbjJBUE9ZYnloWTZqMVlLVDJBMWxTV1dhVzhfV21UQndwZ1lfa0s0SzFiQXdSaGJ6Qlp1WkxvZ2NfY29DZlpjMWJFbjVLbnA5dm9tenM1R0VBdFB0N0lzTkxwMzJK; slave_user=gh_2dcc445c6278; openid2ticket_oRbhSwxvnpgBizeeWXAgSS58f2fk=',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=1909871803&lang=zh_CN',
+            'Cookie': 'ua_id=ByZqigJxD9ZTNvAkAAAAANScQE9_iO_dn0CC7PxyTJo=; uuid=382271cefbb5da6bf008eb2cb35c5689; rand_info=CAESIOSGO5erN0judfzg7HvqV7ndJiqSTLvS8BGaGyvgY5s5; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=OSxupB7Jyfn2ErTq+faXZVc2CSp4YeE/tsVDTEtmSGGn9lm9h/3ANkjrU0O6nLGg; slave_sid=RnFzeDlQWDlxN0lKdERWTFFORjdobFZhUjBZbHJ6VmNRUzVtVkR2ZXZVckhRVzREYkRlZTBUc3RnY3dhMXhUN1FCVF9heU5VNDl2TGFlYktKQW5fNDlxN0JZOHUyWnlyZWx0Mkl3ckxyX2VBM3NjYnB3cmpXTFpsOEswRm9WcWg4TGdiRFNLVmFZeXNWRDV5; slave_user=gh_c1f740f2ddf6; xid=1f21d73853392a83eb0c9e91def1259e; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN',
             'Pragma': 'no-cache',
             'Cache-Control': 'no-cache',
             'TE': 'Trailers',
@@ -78,8 +78,8 @@ class Wechat:
         # }
 
     def get_url(self):
-        for i in range(135, 330, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=Mzg4MzEzMzczMA==&type=9&query=&token=1381148804&lang=zh_CN&f=json&ajax=1'
+        for i in range(0, 1650, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA5NzQzOTgzMw==&type=9&query=&token=1909871803&lang=zh_CN&f=json&ajax=1'
             yield url
 
     def get_list_page(self, url):  #  , proxy
@@ -94,7 +94,7 @@ class Wechat:
             for item in results:
                 # id
                 # appmsgid = item['appmsgid']
-                digest = item['digest'].strip()
+                digest = item['digest'].strip()[0:300]
                 # author
                 title = item['title'].strip()
                 link = item['link'].strip()
