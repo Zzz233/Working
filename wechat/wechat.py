@@ -45,7 +45,7 @@ pool = redis.ConnectionPool(host="localhost",
 r = redis.Redis(connection_pool=pool)
 
 
-company = 'LabInOne文献拆解'
+company = 'inature'
 
 
 class Wechat:
@@ -77,8 +77,8 @@ class Wechat:
         # }
 
     def get_url(self):
-        for i in range(0, 200, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA3OTYzMzMyNQ==&type=9&query=&token=440234096&lang=zh_CN&f=json&ajax=1'
+        for i in range(550, 1285, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzU3MTE3MjUyOA==&type=9&query=&token=440234096&lang=zh_CN&f=json&ajax=1'
             yield url
 
     def get_list_page(self, url):  #  , proxy

@@ -48,7 +48,7 @@ session = DBSession()
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=14)
 r = redis.Redis(connection_pool=pool)
 
-task_list = session.query(Data).filter(Data.issn == '0092-8674').all()
+task_list = session.query(Data).filter(Data.issn == '1470-2045').all()
 # task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
 for i in task_list:
     issn = i.issn
