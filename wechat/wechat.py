@@ -45,7 +45,7 @@ pool = redis.ConnectionPool(host="localhost",
 r = redis.Redis(connection_pool=pool)
 
 
-company = '基迪奥生物'
+company = 'LabInOne文献拆解'
 
 
 class Wechat:
@@ -57,11 +57,10 @@ class Wechat:
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
+            'DNT': '1',
             'Connection': 'keep-alive',
-            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=1909871803&lang=zh_CN',
-            'Cookie': 'ua_id=ByZqigJxD9ZTNvAkAAAAANScQE9_iO_dn0CC7PxyTJo=; uuid=382271cefbb5da6bf008eb2cb35c5689; rand_info=CAESIOSGO5erN0judfzg7HvqV7ndJiqSTLvS8BGaGyvgY5s5; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=OSxupB7Jyfn2ErTq+faXZVc2CSp4YeE/tsVDTEtmSGGn9lm9h/3ANkjrU0O6nLGg; slave_sid=RnFzeDlQWDlxN0lKdERWTFFORjdobFZhUjBZbHJ6VmNRUzVtVkR2ZXZVckhRVzREYkRlZTBUc3RnY3dhMXhUN1FCVF9heU5VNDl2TGFlYktKQW5fNDlxN0JZOHUyWnlyZWx0Mkl3ckxyX2VBM3NjYnB3cmpXTFpsOEswRm9WcWg4TGdiRFNLVmFZeXNWRDV5; slave_user=gh_c1f740f2ddf6; xid=1f21d73853392a83eb0c9e91def1259e; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN',
-            'Pragma': 'no-cache',
-            'Cache-Control': 'no-cache',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=440234096&lang=zh_CN',
+            'Cookie': 'ua_id=2AcR7jHlRiH3aE72AAAAAFu7oL6aM2hZhKidSmSBDhg=; uuid=85adcdfa7172c4c06b89acc805f678d7; rand_info=CAESIIwJVnF8mavJduJsl5nYL3vWBVAqayawitp2a45Owb0C; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=7Mk+CrUB4/ep0lT2KBlI0TS66OyaOwZEEtdXe84512M8P3J9QvwdBvCwxieVAKSF; slave_sid=dHlBMEJpTGp6QmF3WEVWZE41aFh5RUtHdGhKN1cxcUlrNVhpTkpWUk1XbWxOVmxMcGxyX2djMHd2WGNYRGxDcXpiaEFPclFTbkNqTWNLc2ZDc05NZWQ3VUdqMnBCaHpiWGpVcVo2Z2VaMENLMDZOdXlaTjVNclRvTHdSTTdWMDhGQU13cHJEVmZmRHlraG5L; slave_user=gh_c1f740f2ddf6; xid=d6ac53050ad8ff5f40a1f2cb7181fcc3; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN',
             'TE': 'Trailers',
         }
         # self.data = {
@@ -78,8 +77,8 @@ class Wechat:
         # }
 
     def get_url(self):
-        for i in range(0, 1650, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA5NzQzOTgzMw==&type=9&query=&token=1909871803&lang=zh_CN&f=json&ajax=1'
+        for i in range(0, 200, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzA3OTYzMzMyNQ==&type=9&query=&token=440234096&lang=zh_CN&f=json&ajax=1'
             yield url
 
     def get_list_page(self, url):  #  , proxy

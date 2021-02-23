@@ -6,7 +6,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index
 from sqlalchemy import String, create_engine
 from sqlalchemy.orm import sessionmaker
+import pymysql
 from sqlalchemy.sql import func
+
 
 # MySql
 engine = create_engine(
@@ -133,13 +135,19 @@ class Temp(Base):
     Version = Column(Integer, nullable=True, comment="")
 
 
+class Temp1(Base):
+    __tablename__ = "temp_1"
+
+    pmid = Column(Integer, primary_key=True, comment="id")
+
+
 class Pubmed:
     def __init__(self):
-        self.base_path = 'C:/Pubmed/baseline/'
+        self.base_path = 'C:/Pubmed/update/'
 
     def get_path(self):
-        while r.exists('xml_task'):
-            path = self.base_path + r.lpop("xml_task")
+        while r.exists('xml_task1'):
+            path = self.base_path + r.lpop("xml_task1")
             yield path
 
     def get_content(self, path):
@@ -546,17 +554,41 @@ class Pubmed:
             print(len(duplicated_list))
         return duplicated_list
 
-    def delete_items(self, duplicated_list):
+    def insert_to_temp_1(self, pmid_list):
+        dup_list = []
         with self.session_maker() as db_session:
-            for item in duplicated_list:
-                db_session.query(Corrections).filter(Corrections.pmid == item).delete()
-                db_session.query(Grant).filter(Grant.pmid == item).delete()
-                db_session.query(Keyword).filter(Keyword.pmid == item).delete()
-                db_session.query(Reference).filter(Reference.pmid == item).delete()
-                db_session.query(Type).filter(Type.pmid == item).delete()
-                db_session.query(Author).filter(Author.pmid == item).delete()
-                db_session.query(Detail).filter(Detail.pmid == item).delete()
-        print('删除完成' + '\n' + '==========')
+            db_session.query(Temp1).delete(synchronize_session='evaluate')
+            for dup_item in pmid_list:
+                new_temp_1 = Temp1(pmid=dup_item)
+                dup_list.append(new_temp_1)
+            db_session.bulk_save_objects(dup_list)
+            print('temp_1表写入')
+
+    def delete_items(self):
+        py_db = pymysql.connect(host='192.168.124.10',
+                                user='root',
+                                password='app1234',
+                                db='pubmed_article',
+                                charset='utf8mb4',)
+        cursor = py_db.cursor()
+        sql = ["delete g from pubmed_article.article_comments_corrections as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.article_grant as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.article_keyword as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.article_type as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.author_info as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.pubmed_article_detail as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;"]
+        for sql_str in sql:
+            try:
+                # 执行SQL语句
+                cursor.execute(sql_str)
+                # 提交修改
+                py_db.commit()
+                print(sql_str + '\n' + '==========')
+            except Exception as e:
+                print(e)
+                # 发生错误时回滚
+                py_db.rollback()
+        # py_db.close()
 
     def insert(self, corrections, grant, keyword, reference, r_type, author, detail):
         with self.session_maker() as db_session:
@@ -621,8 +653,9 @@ class Pubmed:
             dup_show = self.insert_to_temp(final_temp_data)
 
             if len(dup_show) > 0:
-                # todo 删除
-                self.delete_items(dup_show)
+                # todo 写入temp_1 删除
+                self.insert_to_temp_1(dup_show)
+                self.delete_items()
                 self.insert(final_corrections_data,
                             final_grants_data,
                             final_keyword_data,
@@ -638,9 +671,9 @@ class Pubmed:
                             final_article_type_data,
                             final_author_data,
                             final_detail_data)
-            r.lpush('done', path.replace('C:/Pubmed/baseline/', ''))
+            r.lpush('done', path.replace('C:/Pubmed/update/', ''))
             print('文件结束' + '\n' + '==========')
-            # break
+            break
 
 
 if __name__ == "__main__":
