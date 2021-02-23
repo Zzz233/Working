@@ -13,12 +13,12 @@ for result in results:
         # print(result[0])
     except Exception as es:
         # print(es)
-        if len(result[1]) > 3:
+        if len(result[1]) > 4:
             a[result[0]] = result[1].split('   ')
         else:
             a[result[0]] = (result[1]+' ').split('   ')
     else:
-        if len(result[1]) > 3:
+        if len(result[1]) > 4:
             a[result[0]].append(result[1])
         else:
             a[result[0]].append(result[1]+' ')
