@@ -6,7 +6,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, Integer, String, Text, DateTime, Index
 from sqlalchemy import String, create_engine
 from sqlalchemy.orm import sessionmaker
+import pymysql
 from sqlalchemy.sql import func
+
 
 # MySql
 engine = create_engine(
@@ -40,7 +42,7 @@ Base = declarative_base()
 
 
 class Corrections(Base):
-    __tablename__ = "article_comments_corrections"
+    __tablename__ = "1_article_comments_corrections"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="")
     ext_id = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -50,7 +52,7 @@ class Corrections(Base):
 
 
 class Grant(Base):
-    __tablename__ = "article_grant"
+    __tablename__ = "1_article_grant"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     ext_id = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -62,7 +64,7 @@ class Grant(Base):
 
 
 class Keyword(Base):
-    __tablename__ = "Article_keyword"
+    __tablename__ = "1_Article_keyword"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     ext_id = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -71,7 +73,7 @@ class Keyword(Base):
 
 
 class Reference(Base):
-    __tablename__ = "Article_reference"
+    __tablename__ = "1_Article_reference"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     cited_pmid = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -79,7 +81,7 @@ class Reference(Base):
 
 
 class Type(Base):
-    __tablename__ = "article_type"
+    __tablename__ = "1_article_type"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     ext_id = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -88,7 +90,7 @@ class Type(Base):
 
 
 class Author(Base):
-    __tablename__ = "Author_info"
+    __tablename__ = "1_Author_info"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     ext_id = Column(Integer, primary_key=True, nullable=True, comment="")
@@ -100,7 +102,7 @@ class Author(Base):
 
 
 class Detail(Base):
-    __tablename__ = "pubmed_article_detail"
+    __tablename__ = "1_pubmed_article_detail"
 
     pmid = Column(Integer, primary_key=True, nullable=True, comment="id")
     Journal_title = Column(String(250), nullable=True, comment="")
@@ -133,13 +135,10 @@ class Temp(Base):
     Version = Column(Integer, nullable=True, comment="")
 
 
-class Temp_1(Base):
-    __tablename__ = "temp_copy1"
+class Temp1(Base):
+    __tablename__ = "temp_1"
 
-    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    pmid = Column(Integer, nullable=True, comment="")
-    xmlname = Column(String(40), nullable=True, comment="")
-    Version = Column(Integer, nullable=True, comment="")
+    pmid = Column(Integer, primary_key=True, comment="id")
 
 
 class Pubmed:
@@ -344,7 +343,7 @@ class Pubmed:
         # todo pubmed_article_detail 表
         # Journal_title
         try:
-            journal_title = item.xpath(".//Title/text()")[0].strip()[0:250]
+            journal_title = item.xpath(".//Title/text()")[0].strip()
         except Exception:
             journal_title = None
         # Journal_issn 原 Journal_ISSN_link
@@ -372,10 +371,10 @@ class Pubmed:
         # Article_title
         try:
             article_title_text = item.xpath(".//ArticleTitle//text()")
-            article_title = "".join(i for i in article_title_text).rstrip('.')[0:2000]
+            article_title = "".join(i for i in article_title_text).rstrip('.')
             if len(article_title) == 0:
                 vernacular_text = item.xpath(".//VernacularTitle//text()")
-                article_title = " ".join(v for v in vernacular_text).rstrip('.')[0:2000]
+                article_title = " ".join(v for v in vernacular_text).rstrip('.')
         except Exception:
             article_title = None
         # Pub_date
@@ -555,26 +554,50 @@ class Pubmed:
             print(len(duplicated_list))
         return duplicated_list
 
-    def delete_items(self, duplicated_list):
+    def insert_to_temp_1(self, pmid_list):
+        dup_list = []
         with self.session_maker() as db_session:
-            for item in duplicated_list:
-                db_session.query(Corrections).filter(Corrections.pmid == item).delete()
-                db_session.query(Grant).filter(Grant.pmid == item).delete()
-                db_session.query(Keyword).filter(Keyword.pmid == item).delete()
-                db_session.query(Reference).filter(Reference.pmid == item).delete()
-                db_session.query(Type).filter(Type.pmid == item).delete()
-                db_session.query(Author).filter(Author.pmid == item).delete()
-                db_session.query(Detail).filter(Detail.pmid == item).delete()
-        print('删除完成' + '\n' + '==========')
+            db_session.query(Temp1).delete(synchronize_session='evaluate')
+            for dup_item in pmid_list:
+                new_temp_1 = Temp1(pmid=dup_item)
+                dup_list.append(new_temp_1)
+            db_session.bulk_save_objects(dup_list)
+            print('temp_1表写入')
+
+    def delete_items(self):
+        py_db = pymysql.connect(host='192.168.124.10',
+                                user='root',
+                                password='app1234',
+                                db='pubmed_article',
+                                charset='utf8mb4',)
+        cursor = py_db.cursor()
+        sql = ["delete g from pubmed_article.1_article_comments_corrections as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.1_article_grant as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.1_article_keyword as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.1_article_type as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.1_author_info as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;",
+               "delete g from pubmed_article.1_pubmed_article_detail as g inner join pubmed_article.temp_1 as d on g.pmid = d.pmid;"]
+        for sql_str in sql:
+            try:
+                # 执行SQL语句
+                cursor.execute(sql_str)
+                # 提交修改
+                py_db.commit()
+                print(sql_str + '\n' + '==========')
+            except Exception as e:
+                print(e)
+                # 发生错误时回滚
+                py_db.rollback()
+        # py_db.close()
 
     def insert(self, corrections, grant, keyword, reference, r_type, author, detail):
         with self.session_maker() as db_session:
+            db_session.bulk_save_objects(author)
             db_session.bulk_save_objects(corrections)
             db_session.bulk_save_objects(grant)
             db_session.bulk_save_objects(keyword)
             db_session.bulk_save_objects(reference)
             db_session.bulk_save_objects(r_type)
-            db_session.bulk_save_objects(author)
             db_session.bulk_save_objects(detail)
             print('全部写入' + '\n' + '==========')
 
@@ -630,15 +653,27 @@ class Pubmed:
             dup_show = self.insert_to_temp(final_temp_data)
 
             if len(dup_show) > 0:
-                dup_list = []
-                for dup_item in dup_show:
-                    new_temp_1 = Temp_1(pmid=dup_item, xmlname='test', Version=222)
-                    dup_list.append(new_temp_1)
-                session.bulk_save_objects(dup_list)
-                session.commit()
-                session.close()
-
-            break
+                # todo 写入temp_1 删除
+                self.insert_to_temp_1(dup_show)
+                self.delete_items()
+                self.insert(final_corrections_data,
+                            final_grants_data,
+                            final_keyword_data,
+                            final_reference_data,
+                            final_article_type_data,
+                            final_author_data,
+                            final_detail_data)
+            elif len(dup_show) == 0:
+                self.insert(final_corrections_data,
+                            final_grants_data,
+                            final_keyword_data,
+                            final_reference_data,
+                            final_article_type_data,
+                            final_author_data,
+                            final_detail_data)
+            r.lpush('done', path.replace('C:/Pubmed/update/', ''))
+            print('文件结束' + '\n' + '==========')
+            # break
 
 
 if __name__ == "__main__":

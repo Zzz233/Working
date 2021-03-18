@@ -8,7 +8,7 @@ import redis
 import time
 import random
 from contextlib import contextmanager
-from sqlalchemy import and_
+from sqlalchemy import and_, or_
 
 Base = declarative_base()
 
@@ -47,8 +47,17 @@ session = DBSession()
 
 pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=14)
 r = redis.Redis(connection_pool=pool)
-
-task_list = session.query(Data).filter(Data.issn == '2159-8274').all()
+# 32 $ 44
+task_list = session.query(Data).filter(or_(Data.issn == '1097-2765',
+                                           Data.issn == '2058-5276',
+                                           Data.issn == '1552-5260',
+                                           Data.issn == '0270-9139',
+                                           Data.issn == '0896-6273',
+                                           Data.issn == '0003-4967',
+                                           Data.issn == '0169-409X',
+                                           Data.issn == '2468-2667',
+                                           Data.issn == '0033-3190',
+                                           Data.issn == '2468-1253',)).all()
 # task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
 for i in task_list:
     issn = i.issn

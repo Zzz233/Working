@@ -118,9 +118,9 @@ r = redis.Redis(connection_pool=pool)
 
 
 class Abcam(object):
-    def format(self, url):
+    def format(self, url, proxies):
         with requests.Session() as s:
-            resp = s.get(url=url, headers=get_request_headers(), timeout=120)
+            resp = s.get(url=url, headers=get_request_headers(), proxies=proxies,timeout=120)
             html_lxml = etree.HTML(resp.text)
             content = html_lxml.xpath('//div[@id="frame"]')[
                 0
@@ -138,14 +138,14 @@ class Abcam(object):
             )[0].strip()
         except Exception:
             cata_num = None
-        print(cata_num)
+        print('货号： '+cata_num)
 
         # todo Detail-Product_Name
         try:
             name = html.xpath('.//h1[@class="title"]/text()')[0].strip()
         except Exception:
             name = None
-        print(name)
+        print('名字： '+name)
 
         # todo Detail-Antibody_Type
         try:
@@ -159,7 +159,7 @@ class Abcam(object):
                 antibody_type = None
         except Exception:
             antibody_type = None
-        print(antibody_type)
+        print('抗体类型： '+antibody_type)
 
         # todo Detail-Sellable
         sellable = html.xpath('.//div[@class="size-price-placeholder"]')
@@ -167,7 +167,7 @@ class Abcam(object):
             sellable = 'yes'
         else:
             sellable = 'no'
-        print(sellable)
+        print('是否可购： '+sellable)
 
         # todo Detail-Synonyms
         synonyms_list = html.xpath(
@@ -176,7 +176,7 @@ class Abcam(object):
         synonyms = "|".join(i for i in synonyms_list)
         if len(synonyms) == 0:
             synonyms = None
-        print(synonyms)
+        print('别名： '+synonyms)
 
         # todo Detail-Application
         application_list = html.xpath(
@@ -185,7 +185,7 @@ class Abcam(object):
         application = "|".join(l for l in application_list)
         if len(application) == 0:
             application = None
-        print(application)
+        print('应用： '+application)
 
         # todo Detail-Conjugated
         try:
@@ -193,7 +193,7 @@ class Abcam(object):
                 0].replace('Conjugation:', '').strip()
         except:
             conjugation = None
-        print(conjugation)
+        print('conjugation： '+conjugation)
 
         # todo Detail-Clone_Number
         try:
@@ -203,7 +203,7 @@ class Abcam(object):
                     0].strip()
         except:
             clone_number = None
-        print(clone_number)
+        print('clone_number： '+clone_number)
 
         # todo Detail-Recombinant_Antibody
         recombinant = html.xpath('.//a[@class="product-label product-label--recombinant"]')
@@ -211,7 +211,7 @@ class Abcam(object):
             recombinant = 'yes'
         else:
             recombinant = 'no'
-        print(recombinant)
+        print('recombinant： '+recombinant)
 
         # todo Detail-Modified
         try:
@@ -219,7 +219,7 @@ class Abcam(object):
                 './/h3[@class="name"][contains(text(), "描述")]/following-sibling::div[@class="value"][contains(text(), "(")]/text()')[0].split('(')[-1].split(')')[0]
         except:
             modify = None
-        print(modify)
+        print('modify： '+modify)
 
         # todo Detail-Host_Species
         host_list = html.xpath(
@@ -228,13 +228,13 @@ class Abcam(object):
             host = '|'.join(m.strip() for m in host_list)
         else:
             host = None
-        print(host)
+        print('host： '+host)
 
         # todo Detail-Reactivity_Species
 
         # todo Detail-Antibody_detail_URL
         antibody_url = url
-        print(antibody_url)
+        print('antibody_url： '+antibody_url)
 
         # todo Detail-Antibody_Status
 
@@ -249,7 +249,7 @@ class Abcam(object):
             gene_id = '|'.join(n.split(' ')[-1] for n in gene_id_list)
         else:
             gene_id = None
-        print(gene_id)
+        print('gene_id： '+gene_id)
 
         # todo Detail-KO_Validation
         ko_validation = html.xpath('.//img[@alt="使用敲除细胞株进行验证" or @title="使用敲除细胞株进行验证"]')
@@ -257,7 +257,7 @@ class Abcam(object):
             ko_validation = 'yes'
         else:
             ko_validation = 'no'
-        print(ko_validation)
+        print('ko_validation： '+ko_validation)
 
         # todo Detail-Species_Reactivity
         try:
@@ -267,7 +267,7 @@ class Abcam(object):
                     0].strip()
         except:
             species_reactivity = None
-        print(species_reactivity)
+        print('species_reactivity： '+species_reactivity)
 
         # todo Detail-SwissProt
         swissprot_list = html.xpath(
@@ -276,7 +276,7 @@ class Abcam(object):
             swissprot = '|'.join(n.split(' ')[-1] for n in swissprot_list)
         else:
             swissprot = None
-        print(swissprot)
+        print('swissprot： '+swissprot)
 
         # todo Detail-Immunogen
 
@@ -453,23 +453,44 @@ class Abcam(object):
             db_session.bulk_save_objects(app_objs)
             db_session.bulk_save_objects(img_objs)
 
+    def get_proxy(self):
+        proxy_url = 'http://localhost:16888/random?protocol=http'
+        content = requests.get(url=proxy_url).text.strip()
+        proxies = {
+            "http": content,
+            # "https": content,
+        }
+        print("获取新代理", content)
+        return proxies
+
     def run(self):
+        proxies = self.get_proxy()
         while r.exists('abcam'):
-            url = r.lpop('abcam')
+            # url = r.lpop('abcam')
+            url = 'https://www.abcam.cn/sox17-antibody-epr20684-ab224637.html'
+            print('开始' + ' ' + url)
             try:
-                html = self.format(url)
-            except Exception as e:
-                r.rpush('abcam', url)
-                time.sleep(60)
-                continue
-            detail_obj, app_objs, img_objs = self.parse(html, url)
-            try:
-                self.insert(detail_obj, app_objs, img_objs)
+                html = self.format(url, proxies)
             except Exception as e:
                 print(e)
-                time.sleep(random.uniform(3.0, 3.5))
+                r.rpush('abcam', url)
+                proxies = self.get_proxy()
                 continue
-            time.sleep(random.uniform(3.0, 3.5))
+            try:
+                detail_obj, app_objs, img_objs = self.parse(html, url)
+            except Exception as e:
+                r.rpush('abcam', url)
+                print(e)
+                continue
+            break
+            # try:
+            #     self.insert(detail_obj, app_objs, img_objs)
+            # except Exception as e:
+            #     print(e)
+            #     r.rpush('abcam', url)
+            #     # time.sleep(random.uniform(3.0, 3.5))
+            #     continue
+            # time.sleep(random.uniform(3.0, 3.5))
 
 
 if __name__ == '__main__':

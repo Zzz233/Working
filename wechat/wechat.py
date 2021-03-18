@@ -9,7 +9,6 @@ import time
 import random
 from contextlib import contextmanager
 
-
 Base = declarative_base()
 
 
@@ -44,24 +43,21 @@ pool = redis.ConnectionPool(host="localhost",
                             db=15)
 r = redis.Redis(connection_pool=pool)
 
-
-company = 'inature'
+company = '中科院之声'
 
 
 class Wechat:
     def __init__(self):
         self.headers = {
             'Host': 'mp.weixin.qq.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:85.0) Gecko/20100101 Firefox/85.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0',
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
-            'DNT': '1',
             'Connection': 'keep-alive',
-            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=440234096&lang=zh_CN',
-            'Cookie': 'ua_id=2AcR7jHlRiH3aE72AAAAAFu7oL6aM2hZhKidSmSBDhg=; uuid=85adcdfa7172c4c06b89acc805f678d7; rand_info=CAESIIwJVnF8mavJduJsl5nYL3vWBVAqayawitp2a45Owb0C; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=7Mk+CrUB4/ep0lT2KBlI0TS66OyaOwZEEtdXe84512M8P3J9QvwdBvCwxieVAKSF; slave_sid=dHlBMEJpTGp6QmF3WEVWZE41aFh5RUtHdGhKN1cxcUlrNVhpTkpWUk1XbWxOVmxMcGxyX2djMHd2WGNYRGxDcXpiaEFPclFTbkNqTWNLc2ZDc05NZWQ3VUdqMnBCaHpiWGpVcVo2Z2VaMENLMDZOdXlaTjVNclRvTHdSTTdWMDhGQU13cHJEVmZmRHlraG5L; slave_user=gh_c1f740f2ddf6; xid=d6ac53050ad8ff5f40a1f2cb7181fcc3; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN',
-            'TE': 'Trailers',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=921103936&lang=zh_CN',
+            'Cookie': 'ua_id=TpTILW7V3SXRvruFAAAAAPicLxg9Zl2QBANyvFl1PEw=; xid=c1a6d4d59420483cfeb5a814be91fb58; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN; pvid=5851655270; pgv_pvid=4548717900; wxuin=15766856153630; openid2ticket_oT54j1UgMCNoCKsdNH1O1udUtocs=; uuid=9fbd115927264baf97f5748f41952cb5; rand_info=CAESIHN25CkB8avIrQRGeDW1KBmKrXZLFOyOtlKcCiNkATKy; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=lbsCL/y7/Ak6sOQFyHYbhkcbpkD5bL8qHeWbbR6/+P+dC5vIKB4h2s8iCzaF+toB; slave_sid=eUlmN0VIU2VlRFZ1aW4wa1JxVmsxWUVxRmE0dENzVjRtSjM2UUFUaERLX2pTU0tZbHlaN0FFdzl3VjBJQVJVVENXOW5MNmxhRDI3NG51OGE3QTIzNlRPdTZsSkd1Y1VLMzUwUTk4YjY4SHZDczFvWVBJaUhZNmdEY2FFVTFmTjJ6MW44ekFucUNVTzRod1Nq; slave_user=gh_c1f740f2ddf6',
         }
         # self.data = {
         #     "action": "list_ex",
@@ -77,11 +73,11 @@ class Wechat:
         # }
 
     def get_url(self):
-        for i in range(550, 1285, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzU3MTE3MjUyOA==&type=9&query=&token=440234096&lang=zh_CN&f=json&ajax=1'
+        for i in range(1735, 4075, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MjM5NzIyNDI1Mw==&type=9&query=&token=921103936&lang=zh_CN&f=json&ajax=1'
             yield url
 
-    def get_list_page(self, url):  #  , proxy
+    def get_list_page(self, url):  # , proxy
         with requests.session() as s:
             json_data = s.get(url=url, headers=self.headers, timeout=30).json()
         return json_data
