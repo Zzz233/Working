@@ -16,11 +16,10 @@ for result in results:
         if len(result[1]) > 4:
             a[result[0]] = result[1].split('   ')
         else:
-            a[result[0]] = (result[1]+' ').split('   ')
+            a[result[0]] = (result[1] + ' ').split('   ')
     else:
         if len(result[1]) > 4:
             a[result[0]].append(result[1])
         else:
-            a[result[0]].append(result[1]+' ')
+            a[result[0]].append(result[1] + ' ')
 print(a)
-

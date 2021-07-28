@@ -13,10 +13,11 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "article_analytic"
+    __tablename__ = "bio_article_new"
 
     Id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
-    Company = Column(String(100), nullable=True, comment="")
+    teamid = Column(Integer, nullable=True, comment="")
+    teamname = Column(String(100), nullable=True, comment="")
     # appmsgid = Column(Integer, nullable=True, comment="")
     digest = Column(String(200), nullable=True, comment="")
     Author = Column(String(100), nullable=True, comment="")
@@ -26,13 +27,15 @@ class Data(Base):
     create_time = Column(DateTime, nullable=True, comment="")
     update_time = Column(DateTime, nullable=True, comment="")
     pmId = Column(Integer, nullable=True, comment="")
+    ToHomePage = Column(Integer, nullable=True, comment="")
+    status = Column(Integer, nullable=True, comment="")
     doi = Column(String(50), nullable=True, comment="")
     add_time = Column(DateTime, nullable=True, comment="")
 
 
 # MySql
 engine = create_engine(
-    "mysql+pymysql://biopick:bp@2019@123.56.59.48:3306/qdm765045126_db?charset=utf8mb4"
+    "mysql+pymysql://root:app1234@192.168.2.4:3306/biopick_oa?charset=utf8mb4"
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
@@ -43,38 +46,33 @@ pool = redis.ConnectionPool(host="localhost",
                             db=15)
 r = redis.Redis(connection_pool=pool)
 
-company = '中科院之声'
+company = '研之成理'
 
 
 class Wechat:
     def __init__(self):
         self.headers = {
             'Host': 'mp.weixin.qq.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
-            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=921103936&lang=zh_CN',
-            'Cookie': 'ua_id=TpTILW7V3SXRvruFAAAAAPicLxg9Zl2QBANyvFl1PEw=; xid=c1a6d4d59420483cfeb5a814be91fb58; openid2ticket_omkJr54_8EhMTR-UYnHn2sKcPAWk=; mm_lang=zh_CN; pvid=5851655270; pgv_pvid=4548717900; wxuin=15766856153630; openid2ticket_oT54j1UgMCNoCKsdNH1O1udUtocs=; uuid=9fbd115927264baf97f5748f41952cb5; rand_info=CAESIHN25CkB8avIrQRGeDW1KBmKrXZLFOyOtlKcCiNkATKy; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=lbsCL/y7/Ak6sOQFyHYbhkcbpkD5bL8qHeWbbR6/+P+dC5vIKB4h2s8iCzaF+toB; slave_sid=eUlmN0VIU2VlRFZ1aW4wa1JxVmsxWUVxRmE0dENzVjRtSjM2UUFUaERLX2pTU0tZbHlaN0FFdzl3VjBJQVJVVENXOW5MNmxhRDI3NG51OGE3QTIzNlRPdTZsSkd1Y1VLMzUwUTk4YjY4SHZDczFvWVBJaUhZNmdEY2FFVTFmTjJ6MW44ekFucUNVTzRod1Nq; slave_user=gh_c1f740f2ddf6',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=311352274&lang=zh_CN',
+            'Cookie': 'ua_id=TpTILW7V3SXRvruFAAAAAPicLxg9Zl2QBANyvFl1PEw=; xid=3fa80f4e97a67cc2fcf75e9a2e2819fd; mm_lang=zh_CN; pvid=5851655270; pgv_pvid=4548717900; wxuin=15766856153630; openid2ticket_oT54j1UgMCNoCKsdNH1O1udUtocs=; RK=ybY5sB+ecL; ptcz=db395e2df9879fba2e3d2027480e44142f9f19369293ea49aa6e8062645ca88b; openid2ticket_oEC_b6rW3VqJhi4cpHdQsNH9dNSY=; tvfe_boss_uuid=e91067a2d951c61e; pac_uid=0_68c016a23a466; uuid=f84e9b52047c0efe59e58aad1303c129; rand_info=CAESIDV6/8utIbIdNuxsdKGRVwyiy6LHRFNIebarZ7V6UFqD; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=JXHAM7sdMYQj6ZfzcI907KBNAOYaZKAGoqEgoKq+KsHx1xm5wuQ9rGrnuHFLQ0T4; slave_sid=aVNBNTJidmlYcWxXTl8yYzRrNXZLU0hDMHY4cmxzZE92cnZZU1Y0OEw5Q0phRWF0dDJTY29Ic3FqSW9HdHBOenlDblVGZlZFZDBOS3pKVHFTa2F3QTduRWZyTnlmUnJodml5OVlocldGakZwdkV5Z2VWWGdnSW02VGZtS3lQbmpoaEIzeVZaSVZMSFc4TWJO; slave_user=gh_c1f740f2ddf6',
+            'Sec-Fetch-Dest': 'empty',
+            'Sec-Fetch-Mode': 'cors',
+            'Sec-Fetch-Site': 'same-origin',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'TE': 'trailers',
+
         }
-        # self.data = {
-        #     "action": "list_ex",
-        #     "begin": number,
-        #     "count": "5",
-        #     "fakeid": yourfakeid,
-        #     "type": "9",
-        #     "token": yourtoken,
-        #     "lang": "zh_CN",
-        #     "f": "json",
-        #     "ajax": "1",
-        #     "query": "",
-        # }
 
     def get_url(self):
-        for i in range(1735, 4075, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MjM5NzIyNDI1Mw==&type=9&query=&token=921103936&lang=zh_CN&f=json&ajax=1'
+        for i in range(740, 1985 + 5, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzUxMDMzODg2Ng==&type=9&query=&token=311352274&lang=zh_CN&f=json&ajax=1'
             yield url
 
     def get_list_page(self, url):  # , proxy
@@ -87,10 +85,7 @@ class Wechat:
             objects = []
             results = json_data['app_msg_list']
             for item in results:
-                # id
-                # appmsgid = item['appmsgid']
                 digest = item['digest'].strip()[0:300]
-                # author
                 title = item['title'].strip()
                 link = item['link'].strip()
                 cover_img = item['cover'].strip()
@@ -101,14 +96,17 @@ class Wechat:
                 # pmId
                 # doi
                 # add_time
-                new_data = Data(Company=company,
+                new_data = Data(teamname=company,
+                                teamid=122,
                                 # appmsgid=appmsgid,
                                 digest=digest,
                                 Title=title,
                                 Link=link,
                                 Cover_Img=cover_img,
+                                ToHomePage=0,
                                 create_time=create_time,
-                                update_time=update_time)
+                                update_time=update_time,
+                                status=-1)
                 objects.append(new_data)
             return objects
         else:

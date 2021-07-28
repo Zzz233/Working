@@ -293,5 +293,3 @@ if __name__ == '__main__':
     # df.to_sql(name='abnova_antibody_images_add_tag', con=engine, if_exists='append', index=False)  #,index=False, index_label='id'
 
     print('done')
-asda
-asdasd

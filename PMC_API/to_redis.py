@@ -14,7 +14,7 @@ Base = declarative_base()
 
 
 class Data(Base):
-    __tablename__ = "biomedical_journal_pmc_article"
+    __tablename__ = "biomedical_journal_pmc_article_1"
 
     id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
     issn = Column(String(20), nullable=True, comment="")
@@ -37,28 +37,37 @@ class Journal(Base):
     journal_name = Column(String(500), nullable=True, comment="")
 
 
+class Pic(Base):
+    __tablename__ = "biomedical_pmc_article_picture"
+
+    id = Column(Integer, primary_key=True, autoincrement=True, comment="id")
+    issn = Column(String(20), nullable=True, comment="")
+    journal_name = Column(String(50), nullable=True, comment="")
+    pmcid = Column(String(20), nullable=True, comment="")
+    pmid = Column(String(20), nullable=True, comment="")
+    article_type = Column(String(20), nullable=True, comment="")
 
 
 engine = create_engine(
-    "mysql+pymysql://root:app1234@192.168.124.2:3306/pubmed_article?charset=utf8"
+    "mysql+pymysql://root:app1234@192.168.2.4:3306/pubmed_article?charset=utf8"
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
-pool = redis.ConnectionPool(host="localhost", port=6379, decode_responses=True, db=14)
+pool = redis.ConnectionPool(host="123.56.59.48", port=6379, decode_responses=True, db=14, password='!biopicky-2019')
 r = redis.Redis(connection_pool=pool)
 # 32 $ 44
-task_list = session.query(Data).filter(or_(Data.issn == '1097-2765',
-                                           Data.issn == '2058-5276',
-                                           Data.issn == '1552-5260',
-                                           Data.issn == '0270-9139',
-                                           Data.issn == '0896-6273',
-                                           Data.issn == '0003-4967',
-                                           Data.issn == '0169-409X',
-                                           Data.issn == '2468-2667',
-                                           Data.issn == '0033-3190',
-                                           Data.issn == '2468-1253',)).all()
-# task_list = session.query(Detail.Catalog_Number).filter(Detail.Citations != "0").all()
+task_list = session.query(Data).filter(or_(Data.issn == '1098-3600',
+                                           Data.issn == '0198-6325',
+                                           Data.issn == '2051-1426',
+                                           Data.issn == '1744-4292',
+                                           Data.issn == '0008-5472',
+                                           Data.issn == '1756-8722',
+                                           Data.issn == '2405-8025',
+                                           Data.issn == '1542-0124',
+                                           Data.issn == '1350-9047',
+                                           Data.issn == '2326-6066',)).all()
+
 for i in task_list:
     issn = i.issn
     journal_name = i.journal_name
@@ -70,3 +79,15 @@ for i in task_list:
     print(item)
 
 pool.disconnect()
+#
+# task_list = session.query(Pic).all()
+# for i in task_list:
+#     issn = i.issn
+#     journal_name = i.journal_name
+#     pmcid = i.pmcid
+#     pmid = i.pmid
+#     article_type = i.article_type
+#     item = ','.join((pmid, pmcid, issn, journal_name, article_type))
+#     r.rpush("pic_task", item)
+#     print(item)
+

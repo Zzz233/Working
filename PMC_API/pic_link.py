@@ -21,10 +21,13 @@ class Data(Base):
     normal_img = Column(String(400), nullable=True, comment="")
     title = Column(String(500), nullable=True, comment="")
     des = Column(String(2500), nullable=True, comment="")
+    adddate = Column(DateTime, nullable=True, comment="")
+    journal_if = Column(String(10), nullable=True, comment="")
+    if_status = Column(String(5), nullable=True, comment="")
 
 
 engine = create_engine(
-    "mysql+pymysql://root:app1234@192.168.124.10:3306/pubmed_article?charset=utf8"
+    "mysql+pymysql://root:app1234@192.168.2.4:3306/pubmed_article?charset=utf8"
 )
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
