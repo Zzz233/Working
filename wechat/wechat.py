@@ -46,33 +46,32 @@ pool = redis.ConnectionPool(host="localhost",
                             db=15)
 r = redis.Redis(connection_pool=pool)
 
-company = '研之成理'
+company = '药用植物研究前沿 '
 
 
 class Wechat:
     def __init__(self):
         self.headers = {
             'Host': 'mp.weixin.qq.com',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0',
             'Accept': '*/*',
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Accept-Encoding': 'gzip, deflate, br',
             'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'keep-alive',
-            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=10&createType=0&token=311352274&lang=zh_CN',
-            'Cookie': 'ua_id=TpTILW7V3SXRvruFAAAAAPicLxg9Zl2QBANyvFl1PEw=; xid=3fa80f4e97a67cc2fcf75e9a2e2819fd; mm_lang=zh_CN; pvid=5851655270; pgv_pvid=4548717900; wxuin=15766856153630; openid2ticket_oT54j1UgMCNoCKsdNH1O1udUtocs=; RK=ybY5sB+ecL; ptcz=db395e2df9879fba2e3d2027480e44142f9f19369293ea49aa6e8062645ca88b; openid2ticket_oEC_b6rW3VqJhi4cpHdQsNH9dNSY=; tvfe_boss_uuid=e91067a2d951c61e; pac_uid=0_68c016a23a466; uuid=f84e9b52047c0efe59e58aad1303c129; rand_info=CAESIDV6/8utIbIdNuxsdKGRVwyiy6LHRFNIebarZ7V6UFqD; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=JXHAM7sdMYQj6ZfzcI907KBNAOYaZKAGoqEgoKq+KsHx1xm5wuQ9rGrnuHFLQ0T4; slave_sid=aVNBNTJidmlYcWxXTl8yYzRrNXZLU0hDMHY4cmxzZE92cnZZU1Y0OEw5Q0phRWF0dDJTY29Ic3FqSW9HdHBOenlDblVGZlZFZDBOS3pKVHFTa2F3QTduRWZyTnlmUnJodml5OVlocldGakZwdkV5Z2VWWGdnSW02VGZtS3lQbmpoaEIzeVZaSVZMSFc4TWJO; slave_user=gh_c1f740f2ddf6',
+            'Referer': 'https://mp.weixin.qq.com/cgi-bin/appmsg?t=media/appmsg_edit_v2&action=edit&isNew=1&type=77&createType=0&token=1742984158&lang=zh_CN',
+            'Cookie': 'ua_id=TpTILW7V3SXRvruFAAAAAPicLxg9Zl2QBANyvFl1PEw=; xid=ec5a1d553992e78787d4a6f19246f288; mm_lang=zh_CN; pvid=5851655270; pgv_pvid=4548717900; wxuin=15766856153630; openid2ticket_oT54j1UgMCNoCKsdNH1O1udUtocs=; RK=ybY5sB+ecL; ptcz=db395e2df9879fba2e3d2027480e44142f9f19369293ea49aa6e8062645ca88b; openid2ticket_oEC_b6rW3VqJhi4cpHdQsNH9dNSY=; tvfe_boss_uuid=e91067a2d951c61e; pac_uid=0_68c016a23a466; rand_info=CAESILCHHIGh2IJ1qL3cdDdB++kUbB8tykYaFI8e65ppfVTW; slave_bizuin=3882566298; data_bizuin=3882566298; bizuin=3882566298; data_ticket=4sS+sci4N3jNHMkSwHOMj9DH2WTq7xqSJkkTo/s638VEbj3nwr4f8LzG0wnwI6HV; slave_sid=Z18xcGVqT0lyZWVPeFVPQTJXME56UWNlTExPR2RuUkViZ01LbTlsNGJ5aThnV092RGhZaGdsUnlGRV9fSWlQamZTNGJjdU50T0VXR2VLa05yM2kwdWdpS2dEWDFIVkZrX3ZrMWo1amJ4eFJnOHJoWFlJUHl0MUd4QnZqaFpOT05WVUlGZU1QeFpLU2JVVU80; slave_user=gh_c1f740f2ddf6',
             'Sec-Fetch-Dest': 'empty',
             'Sec-Fetch-Mode': 'cors',
             'Sec-Fetch-Site': 'same-origin',
             'Pragma': 'no-cache',
             'Cache-Control': 'no-cache',
             'TE': 'trailers',
-
         }
 
     def get_url(self):
-        for i in range(740, 1985 + 5, 5):
-            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzUxMDMzODg2Ng==&type=9&query=&token=311352274&lang=zh_CN&f=json&ajax=1'
+        for i in range(975, 1060 + 5, 5):
+            url = f'https://mp.weixin.qq.com/cgi-bin/appmsg?action=list_ex&begin={i}&count=5&fakeid=MzU1ODQ5ODMzMw==&type=9&query=&token=1742984158&lang=zh_CN&f=json&ajax=1'
             yield url
 
     def get_list_page(self, url):  # , proxy
@@ -97,7 +96,7 @@ class Wechat:
                 # doi
                 # add_time
                 new_data = Data(teamname=company,
-                                teamid=122,
+                                teamid=568,
                                 # appmsgid=appmsgid,
                                 digest=digest,
                                 Title=title,
